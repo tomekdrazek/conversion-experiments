@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+require 'commander/import'
+
+program :name, 'Soft Proof Viewer - Command Line Interface'
+program :version, '0.0.1'
+program :description, 'Offline cache preparation utillity for SPV-FE.'
+
+
+command :check do |c|
+  c.syntax = 'spv-cli check'
+  c.summary = 'Checks all required library and dependencies.'
+  c.description = 'Some libraries may be missing and we find out which one.'
+  c.example 'Run checks', 'spv-cli check'
+  c.option '-n', '--name NAME', String, "Specify Namespace"
+  c.action do |args, options|
+    puts "Options are: #{options.inspect}"
+    _p=password "Ask for password?"
+    _choice = choose("Favorite language?", :ruby, :perl, :js)
+    speak "test"
+  end
+end
+
+
+command :add do |c|
+
+end
+
+command :delete do |c|
+  c.action do |args, options|
+    puts "Delete Options are: #{options.inspect}"
+  end
+end
+
+command :intent do |c|
+
+end
