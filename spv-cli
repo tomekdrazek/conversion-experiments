@@ -6,7 +6,6 @@ program :name, 'Soft Proof Viewer - Command Line Interface'
 program :version, '0.0.1'
 program :description, 'Offline cache preparation utillity for SPV-FE.'
 
-
 command :check do |c|
   c.syntax = 'spv-cli check'
   c.summary = 'Checks all required library and dependencies.'
@@ -21,9 +20,12 @@ command :check do |c|
   end
 end
 
-
 command :add do |c|
-
+  c.option '-a', '--app NAME', String, "Specify application namespace. Obligatory."
+  c.action do |args, options|
+    puts "Args are:    #{args.inspect}"
+    puts "Options are: #{options.inspect}"
+  end
 end
 
 command :delete do |c|

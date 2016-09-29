@@ -1,15 +1,51 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    celluloid (0.17.2)
+      celluloid-essentials
+      celluloid-extras
+      celluloid-fsm
+      celluloid-pool
+      celluloid-supervision
+      timers (>= 4.1.1)
+    celluloid-essentials (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-extras (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-fsm (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-pool (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-supervision (0.20.5)
+      timers (>= 4.1.1)
+    colorize (0.7.7)
     commander (4.4.0)
       highline (~> 1.7.2)
+    connection_pool (2.2.0)
     highline (1.7.8)
+    hitimes (1.2.3)
+    json (1.8.3)
+    mini_magick (4.5.1)
+    redis (3.2.1)
+    redis-namespace (1.5.2)
+      redis (~> 3.0, >= 3.0.4)
+    sidekiq (3.5.3)
+      celluloid (~> 0.17.2)
+      connection_pool (~> 2.2, >= 2.2.0)
+      json (~> 1.0)
+      redis (~> 3.2, >= 3.2.1)
+      redis-namespace (~> 1.5, >= 1.5.2)
+    timers (4.1.1)
+      hitimes
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  colorize
   commander
+  mini_magick
+  sidekiq
 
 BUNDLED WITH
    1.11.2
