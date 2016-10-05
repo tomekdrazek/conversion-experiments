@@ -73,6 +73,5 @@ for k in r:
 
 image.save(output, quality=100, optimize=False)
 
-
 # Done
 print "Done in %.3f s" % (time.time() - t0)

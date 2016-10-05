@@ -37,6 +37,7 @@ GEM
       redis-namespace (~> 1.5, >= 1.5.2)
     timers (4.1.1)
       hitimes
+    yard (0.9.5)
 
 PLATFORMS
   ruby
@@ -46,6 +47,7 @@ DEPENDENCIES
   commander
   mini_magick
   sidekiq
+  yard
 
 BUNDLED WITH
-   1.11.2
+   1.13.2

@@ -5,6 +5,19 @@ module SPV
   module Convert
     CONVERT_CMD = 'convert' # ImageMagic conversion
     CHANNELS = { cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K' }
+    BASE_RESOLUTION = 300 # dpi
+
+    # Ghostscript defult settings:
+    GS_DEFAULTS = {
+      "-dSAFER": true,
+      "-dBATCH": true,
+      "-dNOPAUSE": true,
+      "-sDEVICE": "tiff32nc",
+      "-r": BASE_RESOLUTION,
+      "-dTextAlphaBits": 4,
+      "-dGraphicsAlphaBits": 4
+    }
+
     module_function
 
     # opens and
@@ -26,7 +39,25 @@ module SPV
 
     end
 
+    def _preflight_pdf(src)
+      out = `mutool pages "#{src}"`
+      out
+    end
 
+    # Converts the source page of the src document into composite cmyk tiff file
+    # @param src  [String] source pdf file (always pdf or ps)
+    # @param dst  [String] output image file (always CMYK tif)
+    # @param page [Number]
+    # @return [Boolean] true or false
+    def _convert_page(src, dst, page, params={})
+
+      gs_params = GS_DEFAULTS.merge(params)
+      gs_params['-dFirstPage'] = page
+      gs_params.map
+      # gs -sDEVICE=tiff32nc -r300 -sDefaultCMYKProfile=src/icc/ISOcoated_v2_eci.icc -sOutputICCProfile=src/icc/ISOcoated_v2_eci.icc -sOutputFile=foo-%ld.tif -sPageList=1 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dNOPAUSE -dBATCH src/Olivia-2012-07.pdf
+
+      # mutool draw -r 300 -D -A 1 -c cmyk -o out.pam src/Bravo-2012-13.pdf 1 && gm convert out.pam out.tif && open out.tif
+    end
     # Converts source cmyk tiff into separate channels, and recompose them into RGB buffers:
     # src - full path to source image file
     # dst - a path to the output folder where files will be located
