@@ -19,7 +19,7 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   def test_pdf_conversion
-    page_11 = fixture_path("Olivia-2012-07-011.pdf")
+  # page_11 = fixture_path("Olivia-2012-07-011.pdf")
     _lorem = fixture_path("Lorem-ipsum.pdf")
     _page = fixture_path("page.pdf")
     # assert_true File.exists?(page_11)
@@ -29,13 +29,15 @@ class TestSPVConvert < Test::Unit::TestCase
       # "-sOutputICCProfile": fixture_path("ISOcoated_v2_eci.icc") } )
     # _convert_page(lorem, "./tmp/test/lorem-no-cms.tif", 2)
 
-    out =  _convert_pdf_page("src/adv_TUI.pdf", "./tmp/test/tui.tif", 1)
+    out =  _convert_pdf_page("src/adv_TUI.pdf", "./tmp/test/tui_sep", 1)
+    puts out
     # cmyk = out.select{|k,v| [:cyan,:magenta,:yellow,:black].include?(k) }
-    cmyk = SPV::Convert::CHANNELS.keys.map { |k| out[k] }
-    puts cmyk
+    # cmyk = SPV::Convert::CHANNELS.keys.map { |k| out[k] }
+    # puts cmyk
 
-    _merge_channels(cmyk, "./tmp/test/tui_ad")
+    chans = _merge_channels(out, "./tmp/test/tui_ad")
 
+    pp chans
     # _convert_page("./tests/fixtures/Olivia-2012-07-011.pdf", "./tmp/test/ol-01.tif", 1)
     # _convert_page(page, "./tmp/test/page-no-cms.tif", 1)
     # _convert_page(page, "./tmp/test/page.tif", 1, {
