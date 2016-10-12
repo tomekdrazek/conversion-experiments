@@ -1,12 +1,17 @@
+
+
 require 'mini_magick'
 require 'securerandom' # rendom guid generator
 
 module SPV
   module Convert
-    CONVERT_CMD = 'convert' # ImageMagic conversion
+    # Basic process channels and their names:
     CHANNELS = { cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K' }
+    # Base resolution for output rendering - the highest bitmap resolution the utility will create (epxressed in DPI)
     BASE_RESOLUTION = 300 # dpi
+    # Rendinering resolution is a resolution used during PDF to raster image conversion
     RENDER_RESOLUTION = BASE_RESOLUTION * 2
+    # Default output JPEG compression quality (1-100)
     COMPRESSION_QUALITY = 95
     # Ghostscript defult settings:
     GS_DEFAULTS = {
@@ -29,18 +34,25 @@ module SPV
 
     module_function
 
-    # opens and
+public
+
+    # Opens the source document
     def open(src)
 
     end
 
+    # Runs basic check on the document, detecting the pages, returns JSON with pages, creates basic structures
     def check
 
     end
 
+    # Convert of the opened source document,
+    def convert
 
-    def extract
+    end
 
+
+    def schedule
     end
 
     # Extract object that can be converted to JSON with output params
@@ -48,16 +60,62 @@ module SPV
 
     end
 
-    def _preflight_pdf(src)
-      out = `mutool pages "#{src}"`
+private
+
+    # Gets basic information about source PDF document, such as page count and their geometry.
+    # @param src [String] a path to the source PDF file (local file system) to be checked.
+    # @return [Array<Object>] returns array of objects with properties of each page: page boxes
+    def _check_pdf(src)
+      lines = `mutool pages "#{src}"`.split("\n")
+      out, cur = [], {}
+      lines.each do |l|
+        tag, attrs = (/\s*<(\w*)\s(.*)\/?>/.match(l)||[])[1,2]
+        if tag
+          attr = Hash[attrs.scan(/(\w+)="([\w.]+)"/)] if (attrs)
+          if tag=="page"
+            out << cur unless cur.empty?
+            attr["pagenum"]=attr["pagenum"].to_i
+            attr['src'] = src
+            cur = attr
+          else
+            attr["w"] = (attr["r"].to_f - attr["l"].to_f).abs
+            attr["h"] = (attr["b"].to_f - attr["t"].to_f).abs
+            ["w","h","l","t","b","r"].each { |k| attr[k]=attr[k].to_f; attr["#{k}px"]=(attr[k].to_f*BASE_RESOLUTION/72).round;  }
+            cur[tag] = attr
+          end
+        else
+          out << cur unless cur.empty?; cur = {}
+        end
+      end
       out
     end
 
-    # Gets a temporory
-    def _tmp(name)
-
+    # Generate random id based on page_no
+    # @return [String] a random seqence of charachters, base 64 to be used as idnetification of newly added page.
+    def _generate_id(page_no)
+      SecureRandom.urlsafe_base64
     end
 
+    # Applies sel expression on array of pages (taken out of preflight). If ids are delivered, then assigns ids to selection, otherwise generate random id
+    # @param src [Arra<Object>] array of page objects (usually result of the preflight)
+    # @param sel [String] expression of the page selection
+    # @param ids [Array<String>] array of string with ids to be assigned to, if not specified, they will be generated.
+    # @return [Array<Object>] filtered array of objects with a page selection, that can be used by conversion engine.
+    def _apply_sel(src, sel, ids = nil)
+      s = _get_page_sel(sel, src.count)
+      out = s.map { |k| src[k-1] }
+      ids.each_with_index do |k,i|
+        out[i]['id'] = k if out[i]
+      end if ids.is_a?(Array)
+      i = 1
+      out.map! { |k| i+=1; k['id'] = _generate_id(i) unless k['id'] ; k }
+      out
+    end
+
+    # Converts page selection described by string (str) into an array of page selection
+    # @param str [String] an expression that defines a page selection, in a following pattern: `1,2,5~6,-2,-1`, where negative numbers are understood as the n-th page from the end, and tilda `~` separator defines the range - a page seqence.
+    # @param page_count [Number] tells the method how many pages are in the sources document to calucate negative numbers correct.
+    # @return [Array] returns array of integers (positive, 1-index) of pages in the selection expression.
     def _get_page_sel(str,page_count = 0)
       out=[]
       def _rfind(i,page_count)
@@ -74,6 +132,7 @@ module SPV
       end
       out
     end
+
     # Converts the source page of the src document into composite cmyk tiff file
     # @param src  [String] source pdf file (always pdf or ps)
     # @param dst  [String] output folder to keep temporary channel separations
