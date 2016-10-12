@@ -1,4 +1,9 @@
-# spv-cli Soft proofing viewer command line cache conversion tool
+# spv-cli 
+
+spv-cli provides:
+
+* Basic PDF and raster image (tif, jpg) conversion routines to populate cache for soft proofing viewer (SPV) with a bunch of test, based on open source utilties.
+* A command line tool to control cache creation (`spv-cli`)
 
 ## Prerequisites
 
@@ -26,10 +31,14 @@ The output is generated in folder `public` with following naming pattern:
 
 ### Pages cache
 
-`public/#{app-namespace}/#{page-id}.json`
+Page cache is organized in the folder structure. The top-most level structure is responsible to keep the application namespace, and each page generated for the particular application is located underneath. 
+
+* The page cache description in JSON format: `public/#{app-namespace}/#{page-id}.json`. The file contains description of each page version delivered to the system. 
+* ​
+
 Is a page description JSON that points to all versions of the page and sources, describes page geometry etc.
 
-`public/#{app-namespace}/#{page-id}/#{version}.cmy.jpg`
+`public/#{app-namespace}/#{page-id}/#{version}.{unique-seq}.jpg`
 CMY channels as RGB bitmap (cyan is mapped to red, etc)
 
 `public/#{app-namespace}/#{page-id}/#{version}.k.jpg`
@@ -37,7 +46,7 @@ Black channel as a grayscale image.
 
 `public/#{app-namespace}/#{page-id}/#{version}.Pantone CV-231.jpg` additional color channels are rendered their names
 
-`public/#{app-namespace}/#{page-id}/#{version}.thb.jpg`
+`public/#{app-namespace}/#{page-id}/#{version}.thb.jpg`Thumbnail
 
 ### Output intents
 

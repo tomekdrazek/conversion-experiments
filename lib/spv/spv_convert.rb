@@ -7,7 +7,7 @@ module SPV
     CHANNELS = { cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K' }
     BASE_RESOLUTION = 300 # dpi
     RENDER_RESOLUTION = BASE_RESOLUTION * 2
-    COMPRESSION_QUALITY = "90%"
+    COMPRESSION_QUALITY = 95
     # Ghostscript defult settings:
     GS_DEFAULTS = {
       "-dBATCH": true, # do not use batch script
@@ -69,17 +69,17 @@ module SPV
       FileUtils.mkdir_p(dst) # Ensure we have this folder!
       basename = Dir::Tmpname.make_tmpname "gs", "tmp"
       hi_res_tif = File.join(dst, [ basename, ".tif" ].join )
-      # Somehow gs does not regognize correct -sPageList parameter
-      gs_params['-dFirstPage'] = page
+      gs_params['-dFirstPage'] = page # Somehow gs does not regognize correct -sPageList parameter
       gs_params['-dLastPage'] = page
       gs_params['-sOutputFile'] = hi_res_tif
-      puts hi_res_tif
       s_params = gs_params.map {|k,v| !!v==v ? k.to_s : "#{k.to_s}#{"sd".include?(k.to_s[1]) ? '=' : ''}#{v.to_s}" }.join(' ')
-      # mutool draw -r 300 -D -A 1 -c cmyk -o out.pam src/Bravo-2012-13.pdf 1 && gm convert out.pam out.tif && open out.tif
-      # puts "gs #{s_params} \"#{src}\""
-      puts `gs #{s_params} "#{src}"`
+      `gs #{s_params} "#{src}" 2>/dev/null`
       channels = Dir.glob(File.join(dst, [ basename, "(*).tif" ].join ))
-      channels.map { |s| [ s.gsub(/.*\((.*)\)\.tif/, "\\1").downcase.to_sym, s ] }.to_h
+      channels.map do |s|
+        chan_name = s.gsub(/.*\((.*)\)\.tif/, "\\1")
+        chan_name = chan_name.downcase.to_sym if CHANNELS.keys.include?(chan_name.downcase.to_sym)
+        [ chan_name, s ]
+      end.to_h
     end
 
     # Converts source cmyk tiff into separate channels, and recompose them into RGB buffers:
@@ -96,19 +96,17 @@ module SPV
     # Recomposes channels into seqence of RGB bitmaps with particular
     # @param chans [Hash] a separation to file path map
 
-    def _merge_channels(chans, dst)
+    def _merge_channels(chans, dst, prefix = "")
       # First extract channels to the sequence CMY, K12, 345, etc.
       conv = []
       if chans.is_a?(Hash)
-        seq = []
-        chn = []
+        seq, chn = [], []
         CHANNELS.keys.each do |k|
           chn << k
           seq << chans.delete(k)
           if seq.count > 2
             conv << { channels: chn, srcs: seq }
-            chn = []
-            seq = []
+            chn, seq = [], []
           end
         end
         chans.each do |k,s|
@@ -116,30 +114,36 @@ module SPV
           seq << s
           if seq.count > 2
             conv << { channels: chn, srcs: seq }
-            chn = []
-            seq = []
+            chn, seq = [], []
           end
         end
         conv << { channels: chn, srcs: seq } if seq.count > 0
       end
-
       seq=0
       FileUtils.mkdir_p(dst)
       conv.each do |v|
         s=v[:srcs]
-        basename = Dir::Tmpname.make_tmpname("%03d-" % seq, "")
+        basename = Dir::Tmpname.make_tmpname("#{prefix}-", "-%03d" % seq)
         out = File.join(dst, [basename,".jpg"].join)
         Dir.mktmpdir do |tmp_dir|
           tmp1 = File.join(tmp_dir,[basename,".1.tif"].join)
           tmp2 = File.join(tmp_dir,[basename,".2.tif"].join)
-          `gm composite -compose CopyGreen "#{s[1]}" "#{s[0]}" -quality 100% -compress None "#{tmp1}"`
-          `gm composite -compose CopyBlue "#{s[2]}" "#{tmp1}" -quality 100% -compress None "#{tmp2}"`
+          if s[1]
+            `gm composite -compose CopyGreen "#{s[1]}" "#{s[0]}" -quality 100% -compress None "#{tmp1}"`
+            if s[2]
+              `gm composite -compose CopyBlue "#{s[2]}" "#{tmp1}" -quality 100% -compress None "#{tmp2}"`
+            else
+              tmp2 = tmp1 # do nothing, last channel is missing in the sequence.
+            end
+          else
+            tmp2 = s[0] # this channel is a tmp2 in fact - use grayscale defintion
+          end
           `gm convert "#{tmp2}" -resample #{BASE_RESOLUTION}x#{BASE_RESOLUTION} -quality #{COMPRESSION_QUALITY} "#{out}"`
         end
         v[:img] = out
+        v.delete(:srcs)
         seq+=1
       end
-
       conv
       # check if chans.count==3
       # out = "#{dst}/#{chans.map{|c| File.basename(c)[0]}.join}.tif"
@@ -157,11 +161,8 @@ module SPV
       y = _extract_channel(:yellow,src,dst)
       _k = _extract_channel(:black,src,dst)
       _merge_channels([c,m,y],dst)
-
       Dir.mktmpdir do |tmp_dir|
-
       end
-
     end
 
   end
