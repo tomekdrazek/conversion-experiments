@@ -58,6 +58,22 @@ module SPV
 
     end
 
+    def _get_page_sel(str,page_count = 0)
+      out=[]
+      def _rfind(i,page_count)
+        i = i.to_i; i > 0 ? i : page_count + i > 0 ? page_count + i + 1 : 1
+      end
+      chunks = str.gsub(/\s+/, "").split(",") # remove all white spaces
+      chunks.each do |chunk|
+        if chunk.include? '~'
+          seq = chunk.split('~')
+          (_rfind(seq[0],page_count).._rfind(seq[1],page_count)).each { |k| out << k }
+        else
+          out << _rfind(chunk,page_count)
+        end
+      end
+      out
+    end
     # Converts the source page of the src document into composite cmyk tiff file
     # @param src  [String] source pdf file (always pdf or ps)
     # @param dst  [String] output folder to keep temporary channel separations

@@ -12,12 +12,27 @@ class TestSPVConvert < Test::Unit::TestCase
   def teardown
   end
 
-  def test_cache_generation
+  def test_page_sel
+    assert_equal [1], _get_page_sel("1")
+    assert_equal [1,2], _get_page_sel("1,2")
+    assert_equal [1,5,4], _get_page_sel("1,5,4")
+    assert_equal [1,2,3,4], _get_page_sel("1~4")
+    assert_equal [16], _get_page_sel("-1", 16)
+    assert_equal [15,16], _get_page_sel("-2~-1", 16)
+    assert_equal [1,2,15,16], _get_page_sel("1,2,-2~-1", 16)
+    assert_equal [1,15,16,2], _get_page_sel("1,-2,-1,2", 16)
+    assert_equal (1..16).to_a, _get_page_sel("1~-1", 16)
+    assert_equal [1], _get_page_sel("-1", 0)
+    assert_equal [2], _get_page_sel("-1", 2)
+    assert_equal [1], _get_page_sel("-2", 2)
+  end
+
+  def _test_cache_generation
     cmyk_to_cache(fixture_path('page.jpg'), './tmp/test')
     assert_true true
   end
 
-  def test_pdf_conversion
+  def _test_pdf_conversion
     ch = Dir.mktmpdir do |tmp_dir|
       out = _convert_pdf_page(fixture_path('colors-spot.pdf'), tmp_dir, 1)
       _merge_channels(out, './tmp/colors-spot/page1', "001")
@@ -45,7 +60,7 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_true ch[1][:channels].include? :black
     assert_true ch[1][:channels].include? "Spot 1"
     assert_true File.exists? ch[1][:img]
-    
+
     # _convert_page("./tests/fixtures/Olivia-2012-07-011.pdf", "./tmp/test/ol-01.tif", 1)
     # _convert_page(page, "./tmp/test/page-no-cms.tif", 1)
     # _convert_page(page, "./tmp/test/page.tif", 1, {
