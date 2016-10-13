@@ -5,29 +5,90 @@ spv-cli provides:
 * Basic PDF and raster image (tif, jpg) conversion routines to populate cache for soft proofing viewer (SPV) with a bunch of test, based on open source utilties.
 * A command line tool to control cache creation (`spv-cli`)
 
-## Prerequisites
+## Installation
+
+### Prerequisites
 
 You need to install following libraries and utilities before proceeding:
 
-* Ghostscript, which provides `gs` utility, used to render pages out of PDF files.
-* mutool `mutool` utility which makes quick PDF preflight and renders thumbnail of PDF files very fast.
-* Graphics Magic (`gm` utility) used for image conversion. This is replecement of ImageMagic which is slow and consumes a lot of memory.
+* **Ghostscript**, which provides `gs` utility, used to render pages out of PDF files. Visit developer's website: http://ghostscript.com. 
+* **mutool** `mutool` utility which makes quick PDF preflight and renders thumbnail of PDF files very fast. Visit developer's website: http://mupdf.com 
+* **Graphics Magic** (`gm` utility) used for image conversion. This is replecement of ImageMagic which is slow and consumes a lot of memory. Visit developer's website: http://www.graphicsmagick.org
+* **Little CMS** used internally for color manage tiff files  (`tifficc` utility)  and control reference color probes, that controls browser, client side color conversion process.
 
-To install them on macOS:
-* Install mac ports or homebrew
-* With macports perform:
-```
+The set of libraries and tools used is for experimental purposes only. In the final version of the application, these utilities may be replaced with customized executables based on Vertex Libs.
+
+#### Install on macOS:
+
+* Install **MacPorts** or **Homebrew** to support open source utilities and libraries.
+* With **MacPorts** perform:
+```shell
 sudo port install mupdf graphicsmagick lcms ghostscript
 ```
 
-Used libraries and GEMS:
-* The utility is written in `ruby`, and requires version `2.3.1`. You can install it using `rvm` and create a separate gemset for it to use local bundler repository. Bundler will install required gems.  
-* https://github.com/commander-rb/commander - a powerful tool for command line interpreter
+#### Install on Linux (Ubuntu)
 
+> ***TODO: Write this section***
+
+### Setup the utility 
+
+When all libraries and required dependencies are installed, you need to prepare bundle with a gemset:
+
+First ensure the bundler is installed for the current gemset (if you are using RVM or any other version manager):
+
+```shell
+gem install bundler
+```
+
+And than install dependencies:
+
+```
+bundle install
+```
+
+Used libraries and GEMS:
+
+- The utility is written in `ruby`, and requires version `2.3.1`. You can install it using `rvm` and create a separate gemset for it to use local bundler repository. Bundler will install required gems.  
+- The documentation requires `yard` to be installed. 
+- https://github.com/commander-rb/commander - a powerful tool for command line interpreter
+
+### Documentation
+
+The source code of the spv-cli is equipped with decent source code documentation that can be easy build on demand using yard, just perform following command:
+
+```
+yard
+```
+
+And the documentation in viewable HTML format will be created in `doc/index.html`. 
 
 ## Processing and conversion
 
-The output is generated in folder `public` with following naming pattern:
+### Configuration 
+
+The configuration files are application dependant. All configuration are kept in `config` folder of the utility.  Configurations are kept in a form of JSON file. Configuration name must match application namespace provided to the utility. 
+
+```json
+{
+  "namespace": "Automator",
+  "pageName": "{randomHex:2}-{randomHex:4}-{randomHex:2}",
+  "feedback": [
+    {
+      "url": "https://app-back-end:8080/updates/{pageId}",
+      "method": "post",
+    },
+    {
+      "cmd": "echo 'INSERT INTO page_updates (id) VALUES ({pageId})' | psql db" 
+    }
+  ],
+  "APIKeys": {
+    "automator-a-1": "ii20319hkjasoudoi2iupi1902u4nvbjtoo",
+    "automator-a-2": "iuiurhfbjhdsfu23hyh8919289yhr98auso",
+  }
+}
+```
+
+The key feature for the utility is convert a source document that can be PDF or bitmap into a cache data for 
 
 ### Pages cache
 
@@ -79,11 +140,11 @@ Convert RGB to reference JPG:
 convert rgb-64.tif public/cmyk-64.jpg
 ```
 
+## Code testing
+
+The code test are mostly running via set of tests running
+
 ## Remarks
-
-One important remark, the HAML compiler within nodejs, works little different that the one we know from Ruby. The major difference is the way how hashes (dictionaries) are written, instead of `:a=>'value'` use `a: 'value'` - the notation known from json.
-
-Copyright, the images used in the experiement are sourced form National Geographic Traveller 2015 Issues 1,2,3,4 of 2015.
 
 
 For color conversion purposes it's nice to use:

@@ -25,7 +25,6 @@ GEM
     highline (1.7.8)
     hitimes (1.2.3)
     json (1.8.3)
-    mini_magick (4.5.1)
     redis (3.2.1)
     redis-namespace (1.5.2)
       redis (~> 3.0, >= 3.0.4)
@@ -45,7 +44,6 @@ PLATFORMS
 DEPENDENCIES
   colorize
   commander
-  mini_magick
   sidekiq
   yard
 

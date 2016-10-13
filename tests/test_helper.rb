@@ -1,3 +1,4 @@
+STDOUT.sync = true  # Sync the IO upon test to get results on console immediatly
 require 'test/unit'
 require 'pp'
 

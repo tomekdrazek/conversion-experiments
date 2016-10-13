@@ -1,7 +1,8 @@
+# @author Tomasz Drazek
 
-
-require 'mini_magick'
+# require 'mini_magick'
 require 'securerandom' # rendom guid generator
+require 'tmpdir'
 
 module SPV
   module Convert
@@ -35,14 +36,25 @@ module SPV
     module_function
 
 public
+    module_function
+    @src = nil
+    @report = []
+    @config = {}
+    @app = "sample"
 
-    # Opens the source document
+
+
+    # Opens the source document, verfifies its validity, performs appropriate preflight check
     def open(src)
 
     end
 
-    # Runs basic check on the document, detecting the pages, returns JSON with pages, creates basic structures
-    def check
+    # Adds selection of the current source document to the cache
+    # This method verifies documents, that has been already added to the cache
+    # Schedule pages
+    # @param sel [String] - expression with a string selection
+
+    def add_pages(sel, ids = nil)
 
     end
 
@@ -53,11 +65,6 @@ public
 
 
     def schedule
-    end
-
-    # Extract object that can be converted to JSON with output params
-    def report
-
     end
 
 private
@@ -74,20 +81,26 @@ private
           attr = Hash[attrs.scan(/(\w+)="([\w.]+)"/)] if (attrs)
           if tag=="page"
             out << cur unless cur.empty?
-            attr["pagenum"]=attr["pagenum"].to_i
-            attr['src'] = src
-            cur = attr
+            cur = { 'src' => { 'input' => src, 'page' => attr["pagenum"].to_i }, 'geometry'=>{}}
           else
             attr["w"] = (attr["r"].to_f - attr["l"].to_f).abs
             attr["h"] = (attr["b"].to_f - attr["t"].to_f).abs
             ["w","h","l","t","b","r"].each { |k| attr[k]=attr[k].to_f; attr["#{k}px"]=(attr[k].to_f*BASE_RESOLUTION/72).round;  }
-            cur[tag] = attr
+            cur['geometry'][tag.downcase] = attr
           end
         else
           out << cur unless cur.empty?; cur = {}
         end
       end
       out
+    end
+
+    # Gets basic information about source bitmap and its geometry
+    # @todo Not implemented yet.
+    # @param src [String] a path to the source bitmap file (local file system) to be checked.
+    # @return [Array<Object>] returns an array of objects with properties of the bitmap page. As bitmaps are always single pages the array will only have one entry.
+    def _check_bmp(src)
+
     end
 
     # Generate random id based on page_no
