@@ -4,7 +4,13 @@ require_relative 'lib/spv.rb'
 
 program :name, 'Soft Proof Viewer - Command Line Interface'
 program :version, '0.0.1'
-program :description, 'Offline cache preparation utillity for SPV-FE.'
+program :description, 'Offline cache preparation utillity for Soft Proofing Viewer (SPV).'
+
+$app = 'sample'
+
+global_option('-a', '--app <APP>', String, "Use application namespace") do |app|
+  $app = app
+end
 
 command :check do |c|
   c.syntax = 'spv-cli check'
@@ -13,27 +19,56 @@ command :check do |c|
   c.example 'Run checks', 'spv-cli check'
   c.option '-n', '--name NAME', String, "Specify Namespace"
   c.action do |args, options|
-    puts "Options are: #{options.inspect}"
-    _p=password "Ask for password?"
-    _choice = choose("Favorite language?", :ruby, :perl, :js)
-    speak "test"
+
   end
 end
 
 command :add do |c|
-  c.option '-a', '--app NAME', String, "Specify application namespace. Obligatory."
+  c.syntax = 'spv-cli add -a <APP> [-s <SEL>] [-i <IDS>] <SOURCE_DOCUMENT>'
+  c.summary = 'Adds page version to the cache, creates page if not present.'
+  c.description = 'Page is verfied and checked before it is added, the output from the command is JSON (unless other format is specified.)'
+
+  c.option '-s', '--sel SEL', String, "Page selection from the source document."
+  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be assgined to."
+
   c.action do |args, options|
-    puts "Args are:    #{args.inspect}"
-    puts "Options are: #{options.inspect}"
+    p = SPV::Processor.new($app)
+    p.add( args[0], options.sel, SPV::parse_ids(options.ids, false) )
+    p.process_queue
+    puts JSON.pretty_generate(p.report)
   end
 end
 
 command :delete do |c|
+  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be assgined to."
   c.action do |args, options|
-    puts "Delete Options are: #{options.inspect}"
+    p = SPV::Processor.new($app)
+    p.del(SPV::parse_ids(options.ids))
+    puts JSON.pretty_generate(p.report)
+  end
+end
+
+command :get do |c|
+  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be assgined to."
+  c.action do |args, options|
+    p = SPV::Processor.new($app)
+    p.get(SPV::parse_ids(options.ids))
+    puts JSON.pretty_generate(p.report)
   end
 end
 
 command :intent do |c|
 
+end
+
+command :run do |c|
+  c.syntax = 'spv-cli run'
+  c.summary = 'Lanuches the sidekiq worker to perform conversion process in the background (requires Redis).'
+  c.description = 'The redis must be installed in order to run background processing'
+  c.option '-d', '--deamonize', "Execute in the background"
+  c.option '-l', '--log FILE', String, "Output log to the file instead standard output"
+  c.example 'Run sidekiq and perform opertions.', 'spv-cli run'
+  c.action do |args, options|
+    system "bundle exec sidekiq -r ./lib/spv/spv_worker.rb"
+  end
 end

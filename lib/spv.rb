@@ -5,7 +5,6 @@ require_relative 'spv/spv_utils'
 require 'json'
 
 module SPV
-
   # Processor instance is responsible for control a single document analysis and conversion.
   # this class is used internally by the command line utility and web-services to
   class Processor
@@ -25,7 +24,6 @@ module SPV
       @report = []
       @queue = []
       @config = nil
-      @async = false
       self.app=app
     end
 
@@ -56,15 +54,24 @@ module SPV
     end
 
     def get(ids)
-
+      ids.each do |page_id|
+        with_lock_on_file(page_file(page_id)) do
+          report_entry = if File.exists?(page_file(page_id))
+            JSON.parse(File.read(page_file(page_id)))
+          else
+            { 'id'=> page_id }
+          end
+          @report << report_entry
+        end
+      end
     end
 
-    def process_queue
+    def process_queue(async=true)
       while entry = @queue.pop
         if async
-          SPV::Worker.perform_async(entry)
+          SPV::ConversionWorker.perform_async(entry)
         else
-          SPV::Worker.new.perform(entry)
+          SPV::ConversionWorker.new.perform(entry)
         end
       end
     end
@@ -76,18 +83,21 @@ module SPV
       queue.each do |entry|
         page_id = entry['id']
         FileUtils.mkdir_p(page_path(page_id))  # Ensure path exists
-        report_entry = if File.exists?(page_file(page_id))
-          JSON.parse(File.read(page_file(page_id)))
-        else
-          { 'id'=> page_id, 'versions'=> [ ] }
+        with_lock_on_file(page_file(page_id)) do
+          report_entry = if File.exists?(page_file(page_id))
+            JSON.parse(File.read(page_file(page_id)))
+          else
+            { 'id'=> page_id, 'versions'=> [ ] }
+          end
+          version = report_entry['versions'].count + 1
+          version_entry = entry.select { |k| k!='id' }
+          version_entry['version'] = version
+          report_entry['versions'] << version_entry
+          File.write(page_file(page_id), JSON.pretty_generate(report_entry))
+          @report << report_entry
+          @queue << { 'app'=>@app, 'id'=>page_id, 'version'=> version-1 }
         end
-        version = report_entry['versions'].count + 1
-        version_entry = entry.select { |k| k!='id' }
-        version_entry['version'] = version
-        report_entry['versions'] << version_entry
-        File.write(page_file(page_id), JSON.pretty_generate(report_entry))
-        @report << report_entry
-        @queue << { 'app'=>@app, 'id'=>page_id, 'version'=> version-1 }
+
       end
     end
 

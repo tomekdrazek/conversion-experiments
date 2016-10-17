@@ -90,6 +90,10 @@ The configuration files are application dependant. All configuration are kept in
 
 The key feature for the utility is convert a source document that can be PDF or bitmap into a cache data for 
 
+* `namespace` is a human readable name of the application namespace (not used so far)
+* `pageName` is a way how the page name is generated. The convention is applied to the pages that does have assigned page id via API itself. 
+* ​
+
 ### Pages cache
 
 Page cache is organized in the folder structure. The top-most level structure is responsible to keep the application namespace, and each page generated for the particular application is located underneath. 
