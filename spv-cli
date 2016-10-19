@@ -12,6 +12,11 @@ global_option('-a', '--app <APP>', String, "Use application namespace") do |app|
   $app = app
 end
 
+global_option('-o','--output <json|json-pretty|short>', String, "Force output data to be formatted, override application configuration") do |type|
+  $type = type
+end
+
+
 command :check do |c|
   c.syntax = 'spv-cli check'
   c.summary = 'Checks all required library and dependencies.'
@@ -33,27 +38,28 @@ command :add do |c|
 
   c.action do |args, options|
     p = SPV::Processor.new($app)
+    raise "No source document specified" if args[0].nil?
     p.add( args[0], options.sel, SPV::parse_ids(options.ids, false) )
     p.process_queue
-    puts JSON.pretty_generate(p.report)
+    p.output($type)
   end
 end
 
 command :delete do |c|
-  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be assgined to."
+  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be deleted."
   c.action do |args, options|
     p = SPV::Processor.new($app)
-    p.del(SPV::parse_ids(options.ids))
-    puts JSON.pretty_generate(p.report)
+    p.del(SPV::parse_ids(options.ids || args[0].to_s))
+    p.output($type)
   end
 end
 
 command :get do |c|
-  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be assgined to."
+  c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be listed."
   c.action do |args, options|
     p = SPV::Processor.new($app)
-    p.get(SPV::parse_ids(options.ids))
-    puts JSON.pretty_generate(p.report)
+    p.get(SPV::parse_ids(options.ids || args[0].to_s))
+    p.output($type)
   end
 end
 

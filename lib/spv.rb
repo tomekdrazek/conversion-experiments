@@ -28,6 +28,24 @@ module SPV
     end
 
 
+    def output(force_type=nil)
+      type = @config['output']
+      type = force_type if (force_type)
+      case type
+      when 'json'
+        puts @report.to_json
+      when 'json-pretty'
+        puts JSON.pretty_generate(@report)
+      else
+        @report.each do |e|
+          puts "#{e['id']}: status: #{e['status']}, versions: #{e['versions'].count}"
+          e['versions'].each do |v|
+            puts "- #{v['version']}: status: #{v['cache'] ? "ready" : "pending"}, "
+          end if e['versions']
+        end
+      end
+    end
+
     # Adds a new version of the pages to the particular page ids
     # @param src [String] path to to a source document
     # @param sel [String] page selection expression
@@ -50,7 +68,16 @@ module SPV
     end
 
     def del(ids)
-
+      ids.each do |page_id|
+        with_lock_on_file(page_file(page_id)) do
+          report_entry = if File.exists?(page_file(page_id))
+            JSON.parse(File.read(page_file(page_id)))
+          else
+            { 'id'=> page_id, 'status'=>'deleted' }
+          end
+          @report << report_entry
+        end
+      end
     end
 
     def get(ids)
@@ -59,7 +86,7 @@ module SPV
           report_entry = if File.exists?(page_file(page_id))
             JSON.parse(File.read(page_file(page_id)))
           else
-            { 'id'=> page_id }
+            { 'id'=> page_id, 'status'=>'deleted' }
           end
           @report << report_entry
         end
