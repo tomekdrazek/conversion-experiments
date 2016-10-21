@@ -10,7 +10,7 @@ class TestSPVConvert < Test::Unit::TestCase
   include SPV::Convert
 
   def setup
-    FileUtils.rm_rf './tmp/test'
+    FileUtils.rm_rf './tmp/*'
   end
 
   def teardown
@@ -48,14 +48,15 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # Tests bitmap page preflight
-  # @todo Not implemented.
-  def _test_bmp_preflight
-
+  def test_bmp_preflight
+    out = _check_bmp(fixture_path('colors-cmyk-noprofile.tiff'))
+    assert_equal 1, out.count
+    assert_equal 2480, out[0]['geometry']['mediabox']['wpx']
+    assert_equal 3507, out[0]['geometry']['mediabox']['hpx']
   end
 
-
   # The worker that performs PDF to cache conversion (the routine normally lunched in the background)
-  def _test_pdf_conversion
+  def test_pdf_conversion
     # This test low level PDF to output bitmap cache conversion:
     ch = Dir.mktmpdir do |tmp_dir|
       out = _convert_pdf_page(fixture_path('colors-spot.pdf'), tmp_dir, 1)
@@ -94,11 +95,11 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # Test bitmap conversion
-  # @todo Not implemented.
-  def _test_bitmap_conversion
+  # @todo Checking of color managment variants during conversion.
+  def test_bmp_conversion
     ch = Dir.mktmpdir do |tmp_dir|
-      out = _convert_bmp_page(fixture_path('colors-spot-1.tif'), tmp_dir)
-      _merge_channels(out, './tmp/colors-spot/page1-tif-', "001")
+      out = _convert_bmp_page(fixture_path('colors-cmyk-noprofile.tiff'), tmp_dir)
+      _merge_channels(out, './tmp/colors-spot/colors-cmyk-tif', "001")
     end
     assert_equal 2, ch.count
     assert_equal 3, ch[0][:channels].count

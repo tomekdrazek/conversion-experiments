@@ -81,7 +81,7 @@ private
           attr = Hash[attrs.scan(/(\w+)="([\w.]+)"/)] if (attrs)
           if tag=="page"
             out << cur unless cur.empty?
-            cur = { 'src' => { 'input' => src, 'page' => attr["pagenum"].to_i }, 'geometry'=>{}}
+            cur = { 'src' => { 'input' => src, 'page' => attr["pagenum"].to_i, 'type'=>'pdf' }, 'geometry'=>{}}
           else
             attr["w"] = (attr["r"].to_f - attr["l"].to_f).abs
             attr["h"] = (attr["b"].to_f - attr["t"].to_f).abs
@@ -100,7 +100,19 @@ private
     # @param src [String] a path to the source bitmap file (local file system) to be checked.
     # @return [Array<Object>] returns an array of objects with properties of the bitmap page. As bitmaps are always single pages the array will only have one entry.
     def _check_bmp(src)
+      d = `gm identify -format "%m,%r,%w,%h,%x,%y,%U,%q" "#{src}"`.to_s.split(',')
+      if d && d.count >0
+        out, cur, mediabox = [], {}, {}
+        resolution = d[4].to_i || 300
+        mediabox['tpx'] = mediabox['lpx'] = 0
+        mediabox['rpx'] = mediabox['wpx'] = d[2].to_i
+        mediabox['bpx'] = mediabox['hpx'] = d[3].to_i
+        ["w","h","l","t","b","r"].each { |k| mediabox[k]=mediabox["#{k}px"].to_f*72/resolution; }
+        cur = { 'src' => { 'input' => src, 'page' => 1, 'type'=> d[0].to_s, 'color'=> d[1].to_s }, 'geometry'=>{ 'mediabox' => mediabox } }
 
+        out << cur
+      end
+      out
     end
 
     # Generate random id based on page_no
@@ -170,20 +182,37 @@ private
       end.to_h
     end
 
+    # Converts the source page delivered as a bitmap (JPG, TIFF)
+    # It performs color managment, if required (assumption: the output should be cmyk)
+    # Than extracts each channel out of CMYK version of the page.
+    # @param src  [String] source pdf file (always pdf or ps)
+    # @param dst  [String] output folder to keep temporary channel separations
+    # @return [Hash] map of separation name to channel file name, can be used later by #_merge_channels
+    def _convert_bmp_page(src, dst, params={})
+      # @todo Perform ICC color conversion first:
+      # Extract CMYK channels out of the bitmap delivered.
+      out = {}
+      FileUtils.mkdir_p(dst) # Ensure we have this folder!
+      CHANNELS.keys.each do |k|
+        basename = Dir::Tmpname.make_tmpname k.to_s, "tmp"
+        out[k] = _extract_channel(k,src,File.join(dst, [basename, k.to_s].join))
+      end
+      out
+    end
+
     # Converts source cmyk tiff into separate channels, and recompose them into RGB buffers:
     # src - full path to source image file
     # dst - a path to the output folder where files will be located
     def _extract_channel(chan, src, dst)
-      out = "#{dst}/#{chan.to_s[0]}.tif"
+      out = "#{dst}.tif"
       `gm convert "#{src}" -channel #{chan.to_s} -negate +profile "*" -quality 100% -compress None "#{out}"`
-      # `convert "#{src}"[0] -channel #{chan.to_s} -strip -negate -separate -set colorspace gray "#{out}"`
-      # `convert "#{src}"[0] -fx #{CHANNELS[chan]} -strip -negate -set colorspace gray "#{out}"`
       out
     end
 
     # Recomposes channels into seqence of RGB bitmaps with particular
+    # This method first attempts to collect CMY into first bitmap, than K and spot colors in next channels in sequence
     # @param chans [Hash] a separation to file path map
-
+    # @return [Array<Hash>] returns a list of output cache recomposed
     def _merge_channels(chans, dst, prefix = "")
       # First extract channels to the sequence CMY, K12, 345, etc.
       conv = []
@@ -233,13 +262,6 @@ private
         seq+=1
       end
       conv
-      # check if chans.count==3
-      # out = "#{dst}/#{chans.map{|c| File.basename(c)[0]}.join}.tif"
-      # tmp = "#{dst}/#{chans.map{|c| File.basename(c)[0]}.join}-tmp.tif"
-      # `gm composite -compose CopyGreen "#{chans[1]}" "#{chans[0]}" -quality 100% -compress None "#{tmp}"`
-      # `gm composite -compose CopyBlue "#{chans[2]}" "#{tmp}" -quality 100% -compress None "#{out}" && rm "#{tmp}"`
-      # # `convert #{chans.map{|c| '"'+c+'"'}.join(" ") } -channel RGB -combine "#{out}"`
-      # out
     end
 
     def cmyk_to_cache(src, dst)
