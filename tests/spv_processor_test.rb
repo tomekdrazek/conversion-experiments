@@ -50,4 +50,11 @@ class TestSPVProcessor < Test::Unit::TestCase
     assert_equal 4, Dir.glob('public/sample/page-1/*.jpg').count
     assert_equal 2, Dir.glob('public/sample/page-2/*.jpg').count
   end
+
+  def test_list
+    p = SPV::Processor.new('sample')
+    p.add(fixture_path('colors.pdf'), nil, ['page-1'])
+    p.list("*")
+    p.output('json-pretty')
+  end
 end

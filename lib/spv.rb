@@ -32,16 +32,22 @@ module SPV
       type = @config['output']
       type = force_type if (force_type)
       case type
+      when 'yaml'
+        puts @report.to_yaml
       when 'json'
         puts @report.to_json
-      when 'json-pretty'
+      when 'jsonp'
         puts JSON.pretty_generate(@report)
       else
         @report.each do |e|
-          puts "#{e['id']}: status: #{e['status']}, versions: #{e['versions'].count}"
-          e['versions'].each do |v|
-            puts "- #{v['version']}: status: #{v['cache'] ? "ready" : "pending"}, "
-          end if e['versions']
+          if e['versions']
+            puts "#{e['id']}: status: #{e['status']}, versions: #{e['versions'].count}"
+            e['versions'].each do |v|
+              puts "- #{v['version']}: status: #{v['cache'] ? "ready" : "pending"}, "
+            end if e['versions']
+          else
+            puts "#{e['id']}"
+          end
         end
       end
     end
@@ -90,6 +96,14 @@ module SPV
           end
           @report << report_entry
         end
+      end
+    end
+
+    def list(pattern)
+      @report = []
+      Dir.glob(page_file(pattern)).each do |f|
+        page_id = File.basename(f, ".*")
+        @report << { 'id'=> page_id }
       end
     end
 

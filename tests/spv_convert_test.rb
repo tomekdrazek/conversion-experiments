@@ -33,7 +33,6 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_equal [1], _get_page_sel("-2", 2)
   end
 
-
   # Tests PDF page preflight
   def test_pdf_preflight
     out = _check_pdf(fixture_path('colors-spot.pdf'))
@@ -42,7 +41,6 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_equal 3508, out[1]['geometry']['mediabox']['hpx']
     out = _check_pdf(fixture_path('Lorem-ipsum.pdf'))
     assert_equal 8, out.count
-    # puts out.to_json
     out = _apply_sel(out, "1~4,-1", ['page1', 'page2', 'page3', nil, 'page8'])
     assert_equal 5, out.count
   end

@@ -1,7 +1,7 @@
 {
   "namespace": "Sample Application",
   "repository": "public/sample",
-  "output": "json",
+  "output": "list",
   "pageName": "{randomHex:2}-{randomHex:4}-{randomHex:2}",
   "feedback": [
     {
