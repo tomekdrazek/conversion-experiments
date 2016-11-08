@@ -11,42 +11,52 @@ module SPV
     include SPV::Convert
     include SPV::Utils
 
-    # @attr_reader Gets current preflight and docuemnt
-    attr_reader :report
 
     attr_accessor :async
 
+    # @attr_reader Gets current preflight and docuemnt
+    attr_reader :report
     attr_reader :queue
+    attr_reader :intents
+    attr_reader :displays
 
     # Constructor of the new Processor for the `app` application
     # @param app [String] application namespace
     def initialize(app)
       @report = []
+      @intents = {}
+      @displays = {}
       @queue = []
       @config = nil
       self.app=app
     end
 
-
-    def output(force_type=nil)
+    def output(obj = :report, force_type=nil)
       type = @config['output']
       type = force_type if (force_type)
+      output = send("#{obj.to_s}")
       case type
       when 'yaml'
-        puts @report.to_yaml
+        puts output.to_yaml
       when 'json'
-        puts @report.to_json
+        puts output.to_json
       when 'jsonp'
-        puts JSON.pretty_generate(@report)
+        puts JSON.pretty_generate(output)
       else
-        @report.each do |e|
-          if e['versions']
-            puts "#{e['id']}: status: #{e['status']}, versions: #{e['versions'].count}"
-            e['versions'].each do |v|
-              puts "- #{v['version']}: status: #{v['cache'] ? "ready" : "pending"}, "
-            end if e['versions']
-          else
-            puts "#{e['id']}"
+        if obj == :report
+          output.each do |e|
+            if e['versions']
+              puts "#{e['id']}: status: #{e['status']}, versions: #{e['versions'].count}"
+              e['versions'].each do |v|
+                puts "- #{v['version']}: status: #{v['cache'] ? "ready" : "pending"}, "
+              end if e['versions']
+            else
+              puts "#{e['id']}"
+            end
+          end
+        else
+          output.each do |k,v|
+            puts "#{k} -> #{v.inspect}"
           end
         end
       end
@@ -115,6 +125,55 @@ module SPV
           SPV::ConversionWorker.new.perform(entry)
         end
       end
+    end
+
+    # Set icc profile for named intent,
+    # @param name
+    # @param icc path or url to icc profile to be used
+    #
+    def intent_set(name, icc)
+      dst = intent_path(name)
+      dst_icc = File.join(dst,File.basename(icc))
+      FileUtils.mkdir_p(dst) # ensure directory exists
+      FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
+      with_lock_on_file(intent_file) do
+        @intents = JSON.parse(File.read(intent_file)) if File.exists?(intent_file)
+        @intents[name] = { icc: dst_icc }
+        File.write(intent_file, JSON.pretty_generate(@intents))
+      end
+    end
+
+    # List intents for the application
+    def intent_list
+      @intents = JSON.parse(File.read(intent_file)) if File.exists?(intent_file)
+    end
+
+    # Removes intent or intents by name
+    # @param name name of the intent to be removed
+    def intent_del(name)
+      with_lock_on_file(intent_file) do
+        @intents = JSON.parse(File.read(intent_file)) if File.exists?(intent_file)
+        @intents.delete(name)
+        File.write(intent_file, JSON.pretty_generate(@intents))
+        dst = intent_path(name)
+        FileUtils.rm_rf(dst) # ensure removal of the directory
+      end
+    end
+
+    # Set icc profile for the display, starts background worker to process
+    def display_set(name,icc)
+
+    end
+
+    # List displayes for the application
+    def display_list(name)
+
+    end
+
+    # Removes display or displays by name
+    # @param name name
+    def display_del(name)
+
     end
 
     private

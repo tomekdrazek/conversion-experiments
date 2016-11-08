@@ -4,7 +4,7 @@ require_relative 'lib/spv.rb'
 require 'commander/import'
 
 program :name, 'Soft Proof Viewer - Command Line Interface'
-program :version, '0.0.1'
+program :version, '0.0.2'
 program :description, 'Offline cache preparation utillity for Soft Proofing Viewer (SPV).'
 
 $app = 'sample'
@@ -13,7 +13,7 @@ global_option('-a', '--app <APP>', String, "Use application namespace") do |app|
   $app = app
 end
 
-global_option('-o','--output <json|jsonp|short>', String, "Force output data to be formatted, override application configuration") do |type|
+global_option('-o','--output <json|jsonp|short>', String, "Force output data to be formatted, override application configuration.") do |type|
   $type = type
 end
 
@@ -24,6 +24,7 @@ command :check do |c|
   c.example 'Run checks', 'spv-cli check'
   c.option '-n', '--name NAME', String, "Specify Namespace"
   c.action do |args, options|
+    # @todo Verify expected libraries here.
   end
 end
 
@@ -38,45 +39,86 @@ command :add do |c|
     raise "No source document specified" if args[0].nil?
     p.add( args[0], options.sel, SPV::parse_ids(options.ids, false) )
     p.process_queue
-    p.output($type)
+    p.output(:report, $type)
   end
 end
 
 command :delete do |c|
+  c.summary = %Q[Removes page and all its version from the repository]
   c.syntax = 'spv-cli delete -a <APP> -i <IDS> | <IDS>'
   c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be deleted."
   c.action do |args, options|
     p = SPV::Processor.new($app)
     p.del(SPV::parse_ids(options.ids || args[0].to_s))
-    p.output($type)
+    p.output(:report, $type)
   end
 end
 
 command :get do |c|
+  c.summary = %Q[Gets page details and returns details]
   c.syntax = 'spv-cli get -a <APP> -i <IDS> | <IDS>'
   c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be listed."
   c.action do |args, options|
     p = SPV::Processor.new($app)
     p.get(SPV::parse_ids(options.ids || args[0].to_s))
-    p.output($type)
+    p.output(:report, $type)
   end
 end
 
 command :list do |c|
+  c.summary = %Q[List all or selected pages detected in the application's namespace]
+  c.description = %Q[List all pages or if specified, these matching the <PATTERN>. The pattern is not a regular expression; instead it follows rules similar to shell filename globbing. To ensure globbing works correctly please specify the pattern in double-quotes.]
   c.syntax = 'spv-cli list -a <APP> [-p <PATTERN>]'
   c.option "-p", "--pattern PATTERN", String, "Pattern"
-  c.description = %Q[List all pages matching the pattern that exists in the application namespace. Default pattern match all files collected.]
-  c.summary = %Q[List all pages in the system for the application namespace]
+
   c.action do |args, options|
     pattern = options.pattern || "*"
     p = SPV::Processor.new($app)
     p.list(pattern)
-    p.output($type)
+    p.output(:report, $type)
   end
 end
 
 command :intent do |c|
+  c.summary = %Q[Controls output intent reposiotry]
+  c.description = %Q[Output intent repository keeps ICC profiles mapped to the common names]
+  c.syntax = "spv-cli intent -s <NAME> <PROFILE.icc> | -d <NAME> | -l"
+  c.option "-s", "--set <NAME> <PROFILE>", String, "Set an ICC profile under the <NAME>, replacing existing"
+  c.option "-d", "--del <NAME>", String, "Delete intent with <NAME> (can be comma-separated list too)"
+  c.option "-l", "--list", "List all available intents for the application's namespace"
+  c.action do |args, options|
+    p = SPV::Processor.new($app)
+    if options.set
+      raise "No ICC profile specified" unless args[0]
+      p.intent_set(options.set, args[0])
+    elsif options.del
+      p.intent_del(options.del)
+    else
+      p.intent_list
+    end
+    p.output(:intents, $type)
+  end
+end
 
+command :display do  |c|
+  c.summary = %Q[Controls display's calibration]
+  c.description = %Q[Calibration keeps the reposotiory of color probes and the assciated display profile.]
+  c.syntax = "spv-cli display -s <NAME> <PROFILE.icc> | -d <NAME> | -l"
+  c.option "-s", "--set <NAME> <PROFILE.icc>", String, "Set an ICC profile under the <NAME>, replacing existing"
+  c.option "-d", "--del <NAME>", String, "Delete intent with <NAME> (can be comma-separated list too)"
+  c.option "-l", "--list", "List all available intents for the application's namespace"
+  c.action do |args, options|
+    p = SPV::Processor.new($app)
+    if options.set
+      raise "No ICC profile specified" unless args[0]
+      p.display_set(options.set, args[0])
+    elsif options.del
+      p.display_del(options.del)
+    else
+      p.display_list
+    end
+    p.output(:displays, $type)
+  end
 end
 
 command :run do |c|

@@ -51,10 +51,20 @@ class TestSPVProcessor < Test::Unit::TestCase
     assert_equal 2, Dir.glob('public/sample/page-2/*.jpg').count
   end
 
-  def test_list
+  def _test_list
     p = SPV::Processor.new('sample')
     p.add(fixture_path('colors.pdf'), nil, ['page-1'])
     p.list("*")
-    p.output('json-pretty')
+    assert_equal 1, p.report.count
+  end
+
+  def test_intents
+    p = SPV::Processor.new('sample')
+    p.intent_set("sample-intent", fixture_path("ISOcoated_v2_eci.icc"))
+    assert_equal 1, p.report.count
+  end
+
+  def test_displays
+
   end
 end

@@ -28,8 +28,8 @@ module SPV
     # @attr_reader Gets current application config
     attr_reader :config
 
-    def repo_path
-      @config['repository']
+    def repo_path(repo = :repository)
+      @config[repo.to_s]
     end
 
     def page_file(page_id)
@@ -42,6 +42,21 @@ module SPV
       File.join(repo_path, page_id)
     end
 
+    def intent_path(name)
+      File.join(repo_path(:intents), name)
+    end
+
+    def intent_file
+      [ repo_path(:intents), ".json" ].join
+    end
+
+    def display_path(name)
+      File.join(repo_path(:displays), name)
+    end
+
+    def display_file
+      [ repo_path(:displays), ".json" ].join
+    end
     # Disables access to the file across all services in unless it's completly written or updated.
     # The method which modifies cache must comply with this when updates the page cache or page cache configurations
     # The mechanism is more than only exclusive lock on file, as the filesystem may not support exclusisve locking, and futhermore, the file may not be updated (read and write) until the process ends.

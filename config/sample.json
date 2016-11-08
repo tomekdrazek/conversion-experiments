@@ -1,6 +1,8 @@
 {
   "namespace": "Sample Application",
   "repository": "public/sample",
+  "intents": "public/intents/sample",
+  "displays": "public/displays/sample",
   "output": "list",
   "pageName": "{randomHex:2}-{randomHex:4}-{randomHex:2}",
   "feedback": [
