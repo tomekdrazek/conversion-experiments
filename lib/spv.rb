@@ -162,18 +162,32 @@ module SPV
 
     # Set icc profile for the display, starts background worker to process
     def display_set(name,icc)
-
+      dst = display_path(name)
+      dst_icc = File.join(dst,File.basename(icc))
+      FileUtils.mkdir_p(dst) # ensure directory exists
+      FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
+      with_lock_on_file(display_file) do
+        @displays = JSON.parse(File.read(display_file)) if File.exists?(display_file)
+        @displays[name] = { icc: dst_icc }
+        File.write(display_file, JSON.pretty_generate(@displays))
+      end
     end
 
     # List displayes for the application
-    def display_list(name)
-
+    def display_list
+      @displays = JSON.parse(File.read(display_file)) if File.exists?(display_file)
     end
 
     # Removes display or displays by name
     # @param name name
     def display_del(name)
-
+      with_lock_on_file(display_file) do
+        @displays = JSON.parse(File.read(display_file)) if File.exists?(display_file)
+        @displays.delete(name)
+        File.write(display_file, JSON.pretty_generate(@displays))
+        dst = display_path(name)
+        FileUtils.rm_rf(dst) # ensure removal of the directory
+      end
     end
 
     private

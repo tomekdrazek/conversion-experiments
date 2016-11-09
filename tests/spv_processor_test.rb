@@ -61,10 +61,22 @@ class TestSPVProcessor < Test::Unit::TestCase
   def test_intents
     p = SPV::Processor.new('sample')
     p.intent_set("sample-intent", fixture_path("ISOcoated_v2_eci.icc"))
-    assert_equal 1, p.report.count
+    p.intent_set("iso-coated", fixture_path("ISOcoated_v2_eci.icc"))
+    assert_equal 2, p.intents.count
+    p.intent_del("sample-intent")
+    assert_equal 1, p.intents.count
+    p.intent_list()
+    assert_equal 1, p.intents.count
   end
 
   def test_displays
-
+    p = SPV::Processor.new('sample')
+    p.display_set("wide-gamut", fixture_path("WideGamutRGB.icc"))
+    p.display_set("sample-display", fixture_path("WideGamutRGB.icc"))
+    assert_equal 2, p.displays.count
+    p.display_del("sample-display")
+    assert_equal 1, p.displays.count
+    p.display_list()
+    assert_equal 1, p.displays.count
   end
 end

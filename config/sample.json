@@ -1,10 +1,10 @@
 {
-  "namespace": "Sample Application",
-  "repository": "public/sample",
-  "intents": "public/intents/sample",
-  "displays": "public/displays/sample",
-  "output": "list",
-  "pageName": "{randomHex:2}-{randomHex:4}-{randomHex:2}",
+  "namespace":  "Sample Application",
+  "repository": "public/sample/pages",
+  "intents":    "public/sample/intents",
+  "displays":   "public/sample/displays",
+  "output":     "list",
+  "pageName":   "{randomHex:2}-{randomHex:4}-{randomHex:2}",
   "feedback": [
     {
       "url": "https://app-back-end:8080/updates/{pageId}",
