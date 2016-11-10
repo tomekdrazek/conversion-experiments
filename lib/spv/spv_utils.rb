@@ -1,5 +1,5 @@
 require 'remote_lock'
-
+require 'colorize'
 
 module SPV
 
@@ -63,6 +63,18 @@ module SPV
     def with_lock_on_file(path, &block)
       # $lock = RemoteLock.new(RemoteLock::Adapters::Memcached.new(memcache))
       yield
+    end
+
+    def _load_json(path)
+      with_lock_on_file(path) do
+        JSON.parse(File.read(path)) if File.exists?(path)
+      end
+    end
+
+    def _save_json(path, object)
+      with_lock_on_file(path) do
+        File.write(path, JSON.pretty_generate(object))
+      end
     end
   end
 end

@@ -119,12 +119,18 @@ command :display do  |c|
     if options.set
       raise "No ICC profile specified" unless args[0]
       p.display_set(options.set, args[0])
+      p.output(p.displays[options.set.to_s], $type)
+    elsif options.get
+      p.display_list
+      p.output(p.displays[options.get.to_s], $type)
     elsif options.del
+      p.output(p.displays[options.del.to_s], $type)
       p.display_del(options.del)
     else
       p.display_list
+      p.output(p.displays, $type)
     end
-    p.output(p.displays, $type)
+
   end
 end
 

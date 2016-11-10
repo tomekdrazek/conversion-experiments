@@ -9,6 +9,7 @@ module SPV
     include Sidekiq::Worker
     include SPV::Convert
     include SPV::Utils
+
     # The worker process to perform conversion in the backgorund.
     def perform(entry)
       logger.debug "Processing: #{entry}"
@@ -31,14 +32,31 @@ module SPV
     end
   end
 
+  # CalibrationWorker
   class CalibrationWorker
     include Sidekiq::Worker
     include SPV::Convert
     include SPV::Utils
-    def perform(app, display, intent)
-      self.app = entry['app']
-      logger.debug "Calibration builder: #{display} for #{intent}"
 
+    def perform(app, display, intent)
+      self.app = app
+      puts "Calibration builder: #{display} for #{intent}"
+      # TODO: change this into path that does not use fixtures:
+      src = "tests/fixtures/cmyk-64.tif"
+
+      # update calibration file with new intent:
+      with_lock_on_file(display_file) do
+        @displays = _load_json(display_file)
+        @intents = _load_json(intent_file)
+        if @displays && @intents && (cur_disp = @displays[display]) && (cur_intent = @intents[intent])
+          dst = File.join(display_path(display), [ intent.to_s, ".jpg"].join)
+          _convert_probes(src, dst, cur_intent['icc'], cur_disp['icc'])
+          cur_disp['intents'] ||= {}
+          cur_disp['intents'][intent] = { 'probes' => dst }
+          @displays[display] = cur_disp
+        end
+        _save_json(display_file, @displays)
+      end
     end
   end
 

@@ -121,24 +121,33 @@ module SPV
       FileUtils.mkdir_p(dst) # ensure directory exists
       FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
       with_lock_on_file(intent_file) do
-        @intents = JSON.parse(File.read(intent_file)) if File.exists?(intent_file)
-        @intents[name] = { icc: dst_icc }
-        File.write(intent_file, JSON.pretty_generate(@intents))
+        intent_list
+        @intents[name] = { 'icc' => dst_icc }
+        _save_json(intent_file, @intents)
       end
+      display_list
+      @displays.each do |k,i|
+        if async
+          SPV::CalibrationWorker.perform_async(app, k, name)
+        else
+          SPV::CalibrationWorker.new.perform(app, k, name)
+        end
+      end
+      display_list if async # reload if async
     end
 
     # List intents for the application
     def intent_list
-      @intents = JSON.parse(File.read(intent_file)) if File.exists?(intent_file)
+      @intents = _load_json(intent_file) || {}
     end
 
     # Removes intent or intents by name
     # @param name name of the intent to be removed
     def intent_del(name)
       with_lock_on_file(intent_file) do
-        @intents = JSON.parse(File.read(intent_file)) if File.exists?(intent_file)
+        intent_list
         @intents.delete(name)
-        File.write(intent_file, JSON.pretty_generate(@intents))
+        _save_json(intent_file, @intents)
         dst = intent_path(name)
         FileUtils.rm_rf(dst) # ensure removal of the directory
       end
@@ -151,24 +160,33 @@ module SPV
       FileUtils.mkdir_p(dst) # ensure directory exists
       FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
       with_lock_on_file(display_file) do
-        @displays = JSON.parse(File.read(display_file)) if File.exists?(display_file)
-        @displays[name] = { icc: dst_icc }
-        File.write(display_file, JSON.pretty_generate(@displays))
+        display_list
+        @displays[name] = { 'icc' => dst_icc }
+        _save_json(display_file, @displays)
       end
+      intent_list
+      @intents.each do |k,i|
+        if async
+          SPV::CalibrationWorker.perform_async(app, name, k)
+        else
+          SPV::CalibrationWorker.new.perform(app,  name, k)
+        end
+      end
+      display_list if async # reload if async
     end
 
     # List displayes for the application
     def display_list
-      @displays = JSON.parse(File.read(display_file)) if File.exists?(display_file)
+      @displays = _load_json(display_file) || {}
     end
 
     # Removes display or displays by name
     # @param name name
     def display_del(name)
       with_lock_on_file(display_file) do
-        @displays = JSON.parse(File.read(display_file)) if File.exists?(display_file)
+        display_list
         @displays.delete(name)
-        File.write(display_file, JSON.pretty_generate(@displays))
+        _save_json(display_file, @displays)
         dst = display_path(name)
         FileUtils.rm_rf(dst) # ensure removal of the directory
       end
@@ -182,20 +200,15 @@ module SPV
         page_id = entry['id']
         FileUtils.mkdir_p(page_path(page_id))  # Ensure path exists
         with_lock_on_file(page_file(page_id)) do
-          report_entry = if File.exists?(page_file(page_id))
-            JSON.parse(File.read(page_file(page_id)))
-          else
-            { 'id'=> page_id, 'versions'=> [ ] }
-          end
+          report_entry = _load_json(page_file(page_id)) || { 'id'=> page_id, 'versions'=> [ ] }
           version = report_entry['versions'].count + 1
           version_entry = entry.select { |k| k!='id' }
           version_entry['version'] = version
           report_entry['versions'] << version_entry
-          File.write(page_file(page_id), JSON.pretty_generate(report_entry))
+          _save_json(page_file(page_id),report_entry)
           @report << report_entry
-          @queue << { 'app'=>@app, 'id'=>page_id, 'version'=> version-1 }
+          @queue  << { 'app'=>@app, 'id'=>page_id, 'version'=> version - 1 }
         end
-
       end
     end
 
