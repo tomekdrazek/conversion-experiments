@@ -18,7 +18,7 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # Tests page selection mechanism.
-  def test_page_sel
+  def _test_page_sel
     assert_equal [1], _get_page_sel("1")
     assert_equal [1,2], _get_page_sel("1,2")
     assert_equal [1,5,4], _get_page_sel("1,5,4")
@@ -34,7 +34,7 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # Tests PDF page preflight
-  def test_pdf_preflight
+  def _test_pdf_preflight
     out = _check_pdf(fixture_path('colors-spot.pdf'))
     assert_equal 2, out.count
     assert_equal 2481, out[1]['geometry']['mediabox']['wpx']
@@ -46,7 +46,7 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # Tests bitmap page preflight
-  def test_bmp_preflight
+  def _test_bmp_preflight
     out = _check_bmp(fixture_path('colors-cmyk-noprofile.tiff'))
     assert_equal 1, out.count
     assert_equal 2480, out[0]['geometry']['mediabox']['wpx']
@@ -54,7 +54,7 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # The worker that performs PDF to cache conversion (the routine normally lunched in the background)
-  def test_pdf_conversion
+  def _test_pdf_conversion
     # This test low level PDF to output bitmap cache conversion:
     ch = Dir.mktmpdir do |tmp_dir|
       out = _convert_pdf_page(fixture_path('colors-spot.pdf'), tmp_dir, 1)
@@ -94,7 +94,7 @@ class TestSPVConvert < Test::Unit::TestCase
 
   # Test bitmap conversion
   # @todo Checking of color managment variants during conversion.
-  def test_bmp_conversion
+  def _test_bmp_conversion
     ch = Dir.mktmpdir do |tmp_dir|
       out = _convert_bmp_page(fixture_path('colors-cmyk-noprofile.tiff'), tmp_dir)
       _merge_channels(out, './tmp/colors-spot/colors-cmyk-tif', "001")
@@ -110,4 +110,10 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_true File.exists? ch[1][:img]
   end
 
+  # Test probes conversion
+  #
+  def test_probes_conversion
+    _convert_probes(fixture_path("cmyk-64.tif"), "./tmp/probes.jpg", fixture_path("ISOcoated_v2_eci.icc"), fixture_path("WideGamutRGB.icc") )
+    assert_true File.exists?("./tmp/probes.jpg")
+  end
 end

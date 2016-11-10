@@ -14,6 +14,9 @@ module SPV
     RENDER_RESOLUTION = BASE_RESOLUTION * 2
     # Default output JPEG compression quality (1-100)
     COMPRESSION_QUALITY = 95
+    # Default probes JPEG compression quality (1-100)
+    PROBES_COMPRESSION_QUALITY = 85
+
     # Ghostscript defult settings:
     GS_DEFAULTS = {
       "-dBATCH": true, # do not use batch script
@@ -264,14 +267,17 @@ private
       conv
     end
 
-    def cmyk_to_cache(src, dst)
-      FileUtils.mkdir_p(dst)
-      c = _extract_channel(:cyan,src,dst)
-      m = _extract_channel(:magenta,src,dst)
-      y = _extract_channel(:yellow,src,dst)
-      _k = _extract_channel(:black,src,dst)
-      _merge_channels([c,m,y],dst)
+    # Converts sample probles (CMYK) into display probes (RGB), using intent profile and display calibration
+    # @param samples_src [String] path to source probes tiff file (reference file)
+    # @param samples_dst [String] path to result rgb jpg file (mapped)
+    # @param intent_icc [String] path to output intent icc
+    # @param display_icc [String] path to display calibration profile
+    def _convert_probes(samples_src, samples_dst, intent_icc, display_icc)
       Dir.mktmpdir do |tmp_dir|
+        basename = Dir::Tmpname.make_tmpname("", "")
+        tmp = File.join(tmp_dir,[basename,".tiff"].join)
+        `tifficc -i "#{intent_icc}" -o "#{display_icc}" -t 3 "#{samples_src}" "#{tmp}"`
+        `gm convert "#{tmp}" -quality #{PROBES_COMPRESSION_QUALITY} "#{samples_dst}"`
       end
     end
 

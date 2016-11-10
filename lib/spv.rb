@@ -31,34 +31,18 @@ module SPV
       self.app=app
     end
 
-    def output(obj = :report, force_type=nil)
+    def output(obj, force_type=nil)
       type = @config['output']
       type = force_type if (force_type)
-      output = send("#{obj.to_s}")
       case type
       when 'yaml'
-        puts output.to_yaml
+        puts obj.to_yaml
       when 'json'
-        puts output.to_json
+        puts obj.to_json
       when 'jsonp'
-        puts JSON.pretty_generate(output)
+        puts JSON.pretty_generate(obj)
       else
-        if obj == :report
-          output.each do |e|
-            if e['versions']
-              puts "#{e['id']}: status: #{e['status']}, versions: #{e['versions'].count}"
-              e['versions'].each do |v|
-                puts "- #{v['version']}: status: #{v['cache'] ? "ready" : "pending"}, "
-              end if e['versions']
-            else
-              puts "#{e['id']}"
-            end
-          end
-        else
-          output.each do |k,v|
-            puts "#{k} -> #{v.inspect}"
-          end
-        end
+        puts obj.inspect
       end
     end
 

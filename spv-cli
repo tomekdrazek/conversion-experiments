@@ -39,7 +39,7 @@ command :add do |c|
     raise "No source document specified" if args[0].nil?
     p.add( args[0], options.sel, SPV::parse_ids(options.ids, false) )
     p.process_queue
-    p.output(:report, $type)
+    p.output(p.report, $type)
   end
 end
 
@@ -50,7 +50,7 @@ command :delete do |c|
   c.action do |args, options|
     p = SPV::Processor.new($app)
     p.del(SPV::parse_ids(options.ids || args[0].to_s))
-    p.output(:report, $type)
+    p.output(p.report, $type)
   end
 end
 
@@ -61,7 +61,7 @@ command :get do |c|
   c.action do |args, options|
     p = SPV::Processor.new($app)
     p.get(SPV::parse_ids(options.ids || args[0].to_s))
-    p.output(:report, $type)
+    p.output(p.report, $type)
   end
 end
 
@@ -75,7 +75,7 @@ command :list do |c|
     pattern = options.pattern || "*"
     p = SPV::Processor.new($app)
     p.list(pattern)
-    p.output(:report, $type)
+    p.output(p.report, $type)
   end
 end
 
@@ -84,19 +84,25 @@ command :intent do |c|
   c.description = %Q[Output intent repository keeps ICC profiles mapped to the common names]
   c.syntax = "spv-cli intent -s <NAME> <PROFILE.icc> | -d <NAME> | -l"
   c.option "-s", "--set <NAME> <PROFILE>", String, "Set an ICC profile under the <NAME>, replacing existing"
+  c.option "-g", "--get <NAME>", String, "Gets intent indicated by <NAME>."
   c.option "-d", "--del <NAME>", String, "Delete intent with <NAME> (can be comma-separated list too)"
   c.option "-l", "--list", "List all available intents for the application's namespace"
   c.action do |args, options|
     p = SPV::Processor.new($app)
     if options.set
       raise "No ICC profile specified" unless args[0]
-      p.intent_set(options.set, args[0])
+      p.intent_set(options.set.to_s, args[0])
+      p.output(p.intents[options.set.to_s], $type)
+    elsif options.get
+      p.intent_list
+      p.output(p.intents[options.get.to_s], $type)
     elsif options.del
+      p.output(p.intents[options.del.to_s], $type)
       p.intent_del(options.del)
     else
       p.intent_list
+      p.output(p.intents, $type)
     end
-    p.output(:intents, $type)
   end
 end
 
@@ -105,6 +111,7 @@ command :display do  |c|
   c.description = %Q[Calibration keeps the reposotiory of color probes and the assciated display profile.]
   c.syntax = "spv-cli display -s <NAME> <PROFILE.icc> | -d <NAME> | -l"
   c.option "-s", "--set <NAME> <PROFILE.icc>", String, "Set an ICC profile under the <NAME>, replacing existing"
+  c.option "-g", "--get <NAME>", String, "Gets display indicated by <NAME>."
   c.option "-d", "--del <NAME>", String, "Delete intent with <NAME> (can be comma-separated list too)"
   c.option "-l", "--list", "List all available intents for the application's namespace"
   c.action do |args, options|
@@ -117,7 +124,7 @@ command :display do  |c|
     else
       p.display_list
     end
-    p.output(:displays, $type)
+    p.output(p.displays, $type)
   end
 end
 
@@ -129,6 +136,6 @@ command :run do |c|
   c.option '-l', '--log FILE', String, "Output log to the file instead standard output"
   c.example 'Run sidekiq and perform opertions.', 'spv-cli run'
   c.action do |args, options|
-    system "bundle exec sidekiq -r ./lib/spv/spv_worker.rb"
+    system "bundle exec sidekiq -r ./lib/spv/spv_worker.rb #{options.deamonize ? "-d" : ''}"
   end
 end

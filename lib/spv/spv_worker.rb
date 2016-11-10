@@ -9,14 +9,12 @@ module SPV
     include Sidekiq::Worker
     include SPV::Convert
     include SPV::Utils
-
-
     # The worker process to perform conversion in the backgorund.
     def perform(entry)
       logger.debug "Processing: #{entry}"
       self.app = entry['app']
-      id = entry['id']
-      ver= entry['version']
+      id  = entry['id']
+      ver = entry['version']
       page_json = JSON.parse(File.read(page_file(id)))
       if version = page_json['versions'][ver]
         # This is time consuming operation, meanwhile the page_json may be modified!
@@ -31,7 +29,24 @@ module SPV
         File.write(page_file(id), JSON.pretty_generate(page_json)) # Save it!
       end
     end
-
   end
+
+  class CalibrationWorker
+    include Sidekiq::Worker
+    include SPV::Convert
+    include SPV::Utils
+    def perform(app, display, intent)
+      self.app = entry['app']
+      logger.debug "Calibration builder: #{display} for #{intent}"
+
+    end
+  end
+
+  # Sidekiq worker, that performs deleyed removal of files in a background - to avoid waitng
+  class CleanupWorker
+    include Sidekiq::Worker
+    include SPV::Utils
+  end
+
 
 end
