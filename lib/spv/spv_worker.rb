@@ -16,16 +16,17 @@ module SPV
       self.app = entry['app']
       id  = entry['id']
       ver = entry['version']
-      page_json = JSON.parse(File.read(page_file(id)))
+      page_json = _load_json(page_file(id))
       if version = page_json['versions'][ver]
-        # This is time consuming operation, meanwhile the page_json may be modified!
         version['cache'] = Dir.mktmpdir do |tmp_dir|
           out = _convert_pdf_page(version['src']['input'], tmp_dir, version['src']['page'].to_i)
           _merge_channels(out, page_path(id), ver + 1)
         end
+        version['thb'] = _thb_pdf(version['src']['input'], page_path(id), version['src']['page'].to_i)
       end
+      # This is time consuming operation, meanwhile the page_json may be modified by other page versions
       with_lock_on_file(page_file(id)) do
-        page_json = JSON.parse(File.read(page_file(id))) # Re-read the json file
+        page_json = _load_json(page_file(id))
         page_json['versions'][ver] = version # update that particular version
         File.write(page_file(id), JSON.pretty_generate(page_json)) # Save it!
       end

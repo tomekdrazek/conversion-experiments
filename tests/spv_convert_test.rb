@@ -5,12 +5,11 @@
 require_relative 'test_helper.rb'
 require_relative '../lib/spv/spv_convert'
 
-
 class TestSPVConvert < Test::Unit::TestCase
   include SPV::Convert
 
   def setup
-    FileUtils.rm_rf './tmp/*'
+    FileUtils.rm_rf './tmp'
   end
 
   def teardown
@@ -111,9 +110,20 @@ class TestSPVConvert < Test::Unit::TestCase
   end
 
   # Test probes conversion
-  #
   def test_probes_conversion
     _convert_probes(fixture_path("cmyk-64.tif"), "./tmp/probes.jpg", fixture_path("ISOcoated_v2_eci.icc"), fixture_path("WideGamutRGB.icc") )
     assert_true File.exists?("./tmp/probes.jpg")
+  end
+
+  # Test PDF thumbnail creation
+  def test_pdf_thb
+    out = _thb_pdf(fixture_path('colors-spot.pdf'), "./tmp/thumb", 1)
+    assert_true File.exists?(out)
+  end
+
+  # Test bitmap thumbnail creation
+  def test_bmp_thb
+    out = _thb_bmp(fixture_path('colors-cmyk-fogra.tiff'), "./tmp/thumb")
+    assert_true File.exists?(out)
   end
 end

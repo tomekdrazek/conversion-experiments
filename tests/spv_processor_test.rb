@@ -44,12 +44,15 @@ class TestSPVProcessor < Test::Unit::TestCase
     p.add(fixture_path('colors.pdf'), nil, ['page-1'])
     assert_equal 1, p.queue.count
     p.process_queue(false)
-    assert_equal 2, Dir.glob('public/sample/pages/page-1/*.jpg').count
+    assert_equal 2, Dir.glob('public/sample/pages/page-1/1-*.jpg').count
+    assert_equal 1, Dir.glob('public/sample/pages/page-1/thb-*.jpg').count
     p.add(fixture_path('colors-spot.pdf'), nil, ['page-1', 'page-2'])
     assert_equal 2, p.queue.count
     p.process_queue(false)
-    assert_equal 4, Dir.glob('public/sample/pages/page-1/*.jpg').count
-    assert_equal 2, Dir.glob('public/sample/pages/page-2/*.jpg').count
+    assert_equal 2, Dir.glob('public/sample/pages/page-1/2-*.jpg').count
+    assert_equal 2, Dir.glob('public/sample/pages/page-1/thb-*.jpg').count
+    assert_equal 2, Dir.glob('public/sample/pages/page-2/1-*.jpg').count
+    assert_equal 1, Dir.glob('public/sample/pages/page-2/thb-*.jpg').count
   end
 
   def test_list

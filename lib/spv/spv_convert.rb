@@ -16,6 +16,10 @@ module SPV
     COMPRESSION_QUALITY = 95
     # Default probes JPEG compression quality (1-100)
     PROBES_COMPRESSION_QUALITY = 85
+    # Maximal width of the thumbnail
+    THUMBNAIL_MAX_WIDTH = 200
+    # Maximal height of the thumbnail
+    THUMBNAIL_MAX_HEIGHT = 300
 
     # Ghostscript defult settings:
     GS_DEFAULTS = {
@@ -203,6 +207,38 @@ private
       out
     end
 
+    # Creates a thumbnail out of the PDF document page
+    # @param src [String] path to the source PDF document
+    # @param dst [String] path to the folder, where the thumbnail will be stored
+    # @param page_no [int] page number of which the thumbnail should be generated
+    # @return [String] a path to the file in `dst` folder where thumbnail has been crated.
+    def _thb_pdf(src,dst,page_no = 1)
+      # step 1. use mutool to draw png file:
+      basename = Dir::Tmpname.make_tmpname "thb-", ("-%05d" % page_no.to_i)
+      dst_path = File.join(dst, [basename, '.jpg'].join)
+      Dir.mktmpdir do |tmp_dir|
+        tmp_path = File.join(tmp_dir,[basename, '.png'].join)
+        `mutool draw -o "#{tmp_path}" -r 72 -w #{THUMBNAIL_MAX_WIDTH} -h #{THUMBNAIL_MAX_HEIGHT} -c rgb "#{src}" #{page_no.to_i}`
+        FileUtils.mkdir_p(dst) # Ensure we have this folder!
+        `gm convert "#{tmp_path}" -quality #{COMPRESSION_QUALITY} "#{dst_path}"`
+      end
+      dst_path
+    end
+
+    # Creates a thumbnail out of the bitmap
+    # @param src [String] path to the source bitmap
+    # @param dst [String] path to the folder, where the thumbnail will be stored
+    # @return [String] a path to newly created thumbnail within `dst` folder
+
+    def _thb_bmp(src,dst)
+      FileUtils.mkdir_p(dst) # Ensure we have this folder!
+      basename = Dir::Tmpname.make_tmpname "thb-", ("-%05d" % 1)
+      dst_path = File.join(dst, [basename, '.jpg'].join)
+      `gm convert "#{src}" -thumbnail #{THUMBNAIL_MAX_WIDTH}x#{THUMBNAIL_MAX_HEIGHT} -colorspace RGB -quality #{COMPRESSION_QUALITY} "#{dst_path}"`
+      dst_path
+    end
+
+
     # Converts source cmyk tiff into separate channels, and recompose them into RGB buffers:
     # src - full path to source image file
     # dst - a path to the output folder where files will be located
@@ -275,6 +311,7 @@ private
     def _convert_probes(samples_src, samples_dst, intent_icc, display_icc)
       Dir.mktmpdir do |tmp_dir|
         basename = Dir::Tmpname.make_tmpname("", "")
+        FileUtils.mkdir_p(File.dirname(samples_dst)) # Ensure we have this folder!
         tmp = File.join(tmp_dir,[basename,".tiff"].join)
         `tifficc -i "#{intent_icc}" -o "#{display_icc}" -t 3 "#{samples_src}" "#{tmp}"`
         `gm convert "#{tmp}" -quality #{PROBES_COMPRESSION_QUALITY} "#{samples_dst}"`
