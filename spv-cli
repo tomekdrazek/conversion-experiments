@@ -145,3 +145,13 @@ command :run do |c|
     system "bundle exec sidekiq -r ./lib/spv/spv_worker.rb #{options.deamonize ? "-d" : ''}"
   end
 end
+
+
+command :server do |c|
+  c.syntax = 'spv-cli server'
+  c.summary = 'Starts independent web server with REST API'
+  c.action do |args, options|
+    require_relative 'lib/spv/spv_rest_api'
+    SPV::RestAPI.run!
+  end
+end
