@@ -28,7 +28,7 @@ module SPV
       @displays = {}
       @queue = []
       @config = nil
-      self.app=app
+      self.app = app
     end
 
     def output(obj, force_type=nil)
@@ -69,9 +69,9 @@ module SPV
 
     def del(ids)
       ids.each do |page_id|
-        with_lock_on_file(page_file(page_id)) do
+        with_lock_on(page_file(page_id)) do
           report_entry = if File.exists?(page_file(page_id))
-            JSON.parse(File.read(page_file(page_id)))
+            _load_json(page_file(page_id))
           else
             { 'id'=> page_id, 'status'=>'deleted' }
           end
@@ -82,9 +82,9 @@ module SPV
 
     def get(ids)
       ids.each do |page_id|
-        with_lock_on_file(page_file(page_id)) do
+        with_lock_on(page_file(page_id)) do
           report_entry = if File.exists?(page_file(page_id))
-            JSON.parse(File.read(page_file(page_id)))
+            _load_json(page_file(page_id))
           else
             { 'id'=> page_id, 'status'=>'deleted' }
           end
@@ -120,7 +120,7 @@ module SPV
       dst_icc = File.join(dst,File.basename(icc))
       FileUtils.mkdir_p(dst) # ensure directory exists
       FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
-      with_lock_on_file(intent_file) do
+      with_lock_on(intent_file) do
         intent_list
         @intents[name] = { 'icc' => dst_icc }
         _save_json(intent_file, @intents)
@@ -144,7 +144,7 @@ module SPV
     # Removes intent or intents by name
     # @param name name of the intent to be removed
     def intent_del(name)
-      with_lock_on_file(intent_file) do
+      with_lock_on(intent_file) do
         intent_list
         @intents.delete(name)
         _save_json(intent_file, @intents)
@@ -159,7 +159,7 @@ module SPV
       dst_icc = File.join(dst,File.basename(icc))
       FileUtils.mkdir_p(dst) # ensure directory exists
       FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
-      with_lock_on_file(display_file) do
+      with_lock_on(display_file) do
         display_list
         @displays[name] = { 'icc' => dst_icc }
         _save_json(display_file, @displays)
@@ -183,7 +183,7 @@ module SPV
     # Removes display or displays by name
     # @param name name
     def display_del(name)
-      with_lock_on_file(display_file) do
+      with_lock_on(display_file) do
         display_list
         @displays.delete(name)
         _save_json(display_file, @displays)
@@ -199,7 +199,7 @@ module SPV
       queue.each do |entry|
         page_id = entry['id']
         FileUtils.mkdir_p(page_path(page_id))  # Ensure path exists
-        with_lock_on_file(page_file(page_id)) do
+        with_lock_on(page_file(page_id)) do
           report_entry = _load_json(page_file(page_id)) || { 'id'=> page_id, 'versions'=> [ ] }
           version = report_entry['versions'].count + 1
           version_entry = entry.select { |k| k!='id' }

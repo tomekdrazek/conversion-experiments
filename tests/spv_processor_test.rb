@@ -53,6 +53,11 @@ class TestSPVProcessor < Test::Unit::TestCase
     assert_equal 2, Dir.glob('public/sample/pages/page-1/thb-*.jpg').count
     assert_equal 2, Dir.glob('public/sample/pages/page-2/1-*.jpg').count
     assert_equal 1, Dir.glob('public/sample/pages/page-2/thb-*.jpg').count
+
+    # TODO: Add and ensure correctness with test of page adding based on bitmaps:
+    p.add(fixture_path('colors-cmyk-fogra.tiff'), nil, ['page-1'])
+
+
   end
 
   def test_list

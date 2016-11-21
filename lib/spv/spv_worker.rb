@@ -25,10 +25,10 @@ module SPV
         version['thb'] = _thb_pdf(version['src']['input'], page_path(id), version['src']['page'].to_i)
       end
       # This is time consuming operation, meanwhile the page_json may be modified by other page versions
-      with_lock_on_file(page_file(id)) do
+      with_lock_on(page_file(id)) do
         page_json = _load_json(page_file(id))
         page_json['versions'][ver] = version # update that particular version
-        File.write(page_file(id), JSON.pretty_generate(page_json)) # Save it!
+        _save_json(page_file(id),page_json)
       end
     end
   end
@@ -46,7 +46,7 @@ module SPV
       src = "tests/fixtures/cmyk-64.tif"
 
       # update calibration file with new intent:
-      with_lock_on_file(display_file) do
+      with_lock_on(display_file) do
         @displays = _load_json(display_file)
         @intents = _load_json(intent_file)
         if @displays && @intents && (cur_disp = @displays[display]) && (cur_intent = @intents[intent])
