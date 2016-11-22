@@ -15,9 +15,8 @@
       "cmd": "echo 'INSERT INTO page_updates (id) VALUES ({pageId})' | psql db"
     }
   ],
-
-  "APIKeys": {
-    "sample-1": "ii20319hkjasoudoi2iupi1902u4nvbjtoo",
-    "sample-2": "iuiurhfbjhdsfu23hyh8919289yhr98auso"
-  }
+  "keys": [
+    "ii20319hkjasoudoi2iupi1902u4nvbjtoo",
+    "iuiurhfbjhdsfu23hyh8919289yhr98auso"
+  ]
 }

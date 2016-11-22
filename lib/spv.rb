@@ -31,6 +31,15 @@ module SPV
       self.app = app
     end
 
+    # Check against configuration for authentication embedded inside json config of the app.
+    def authorized?(key)
+      if @config['keys']
+        @config['keys'].include?(key)
+      else
+        false
+      end
+    end
+
     def output(obj, force_type=nil)
       type = @config['output']
       type = force_type if (force_type)
