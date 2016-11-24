@@ -8,6 +8,9 @@ GEM
     concurrent-ruby (1.0.2)
     connection_pool (2.2.1)
     highline (1.7.8)
+    mime-types (3.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2016.0521)
     multi_json (1.12.1)
     rack (1.6.5)
     rack-protection (1.5.3)
@@ -41,6 +44,7 @@ PLATFORMS
 DEPENDENCIES
   colorize
   commander
+  mime-types
   remote_lock
   sidekiq
   sinatra
@@ -48,4 +52,4 @@ DEPENDENCIES
   yard
 
 BUNDLED WITH
-   1.13.2
+   1.13.6
