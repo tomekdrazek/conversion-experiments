@@ -36,26 +36,21 @@ module SPV
 
       def handle_upload
         if request.content_type.downcase.include? "multipart/form-data"
-          logger.info "detected multipart"
-          logger.info params.inspect
+          logger.info "detected multipart file upload"
           params.select { |k,v| v.is_a?(Hash) && v[:tempfile].is_a?(Tempfile) }
         else
-
-          logger.info params.inspect
-          logger.info "detected body content"
-          mime_type = MIME::Type[request.content_type].first
-
-          if request.content_type.downcase.include? "pdf"
+          logger.info "detected body content file upload"
+          mime_type = MIME::Types[request.content_type].first
+          if request.content_type.downcase.include?("pdf") || request.content_type.downcase.include?("image")
             # Body content may not have a file name
-            filename = [params['filename'] || Dir::Tmpname.make_tmpname("upload", "tmp"), mime_type.preferred_extension].join
+            filename = [params['filename'] || Dir::Tmpname.make_tmpname("upload", "tmp"), ".", mime_type.preferred_extension].join
             tmp_file = Tempfile.new(filename)
             tmp_file.write(request.body.read)
-            { 'body' => { type: request.content_type, name: filename, tempfile: tmp_file } }
+            { 'body' => { type: request.content_type, filename: filename, name: filename, tempfile: tmp_file } }
           end
           # the body contains the file itself.
         end
       end
-
     end
 
     # use Rack::Auth::Basic, "Restricted Area" do |username, password|
@@ -68,21 +63,29 @@ module SPV
     # end
 
     get '/test' do
-      "Hello world"
+      protected!
+      json "Hello world"
     end
 
     get '/page/:id' do |id|
-      # @@processor.get(SPV::parse_ids(id))
-      # json @@processor.report
-      # {}.to_json
+      protected!
+      processor.get(SPV::parse_ids(id))
+      json processor.report
     end
 
 
     put '/page/:id' do |id|
-      logger.info "detected file upload"
-      logger.info request.inspect
+      protected!
       uploaded = handle_upload
-      json uploaded
+      file = uploaded.first[1]
+      logger.info file
+      sel = params[:sel] || "1~-1"
+      tmp_path = File.join(processor.settings['tmp'], "uploads", file[:filename])
+      FileUtils.mkdir_p(File.dirname(tmp_path))
+      FileUtils.mv(file[:tempfile].path, tmp_path)
+      processor.add(tmp_path, sel, SPV::parse_ids(id, false) )
+      processor.process_queue
+      json processor.report
     end
 
     delete '/page/:id' do |id|

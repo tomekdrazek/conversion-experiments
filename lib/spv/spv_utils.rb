@@ -33,6 +33,9 @@ module SPV
     # @attr_reader Gets current application config
     attr_reader :config
 
+    # @attr_reader Gets global spv settings
+    attr_reader :settings
+
     def repo_path(repo = :repository)
       @config[repo.to_s]
     end
