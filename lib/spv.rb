@@ -1,4 +1,5 @@
 # The main interface class
+require_relative 'init.rb'
 require_relative 'spv/spv_convert'
 require_relative 'spv/spv_worker'
 require_relative 'spv/spv_utils'
@@ -10,9 +11,6 @@ module SPV
   class Processor
     include SPV::Convert
     include SPV::Utils
-
-
-    attr_accessor :async
 
     # @attr_reader Gets current preflight and docuemnt
     attr_reader :report
@@ -110,7 +108,7 @@ module SPV
       end
     end
 
-    def process_queue(async=true)
+    def process_queue(async = ASYNC_PROCESSING)
       while entry = @queue.pop
         if async
           SPV::ConversionWorker.perform_async(entry)
@@ -124,7 +122,7 @@ module SPV
     # @param name
     # @param icc path or url to icc profile to be used
     #
-    def intent_set(name, icc)
+    def intent_set(name, icc, async = ASYNC_PROCESSING)
       dst = intent_path(name)
       dst_icc = File.join(dst,File.basename(icc))
       FileUtils.mkdir_p(dst) # ensure directory exists
@@ -163,7 +161,7 @@ module SPV
     end
 
     # Set icc profile for the display, starts background worker to process
-    def display_set(name,icc)
+    def display_set(name,icc, async = ASYNC_PROCESSING)
       dst = display_path(name)
       dst_icc = File.join(dst,File.basename(icc))
       FileUtils.mkdir_p(dst) # ensure directory exists

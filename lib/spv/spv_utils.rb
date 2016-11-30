@@ -17,11 +17,7 @@ module SPV
     # @attr_writer Sets the current application, loads configuration
     def app=(app)
       @config = nil
-      # Load global application settings to connect to redis/remote_lock
-      raise "Missing configuration 'config/config.yml'." unless File.exists?("config/config.yml")
-      @settings = YAML.load(File.read("config/config.yml"))
-      @@redis = @@redis || Redis.new(@settings['redis'] || {})
-      # Local application specific settings
+      @@redis = @@redis || Redis.new(REDIS_CONNECTION || {})
       @app = File.basename(app)
       raise "Missing configuration 'config/#{@app}.json'." unless File.exists?("config/#{@app}.json")
       @config = _load_json("config/#{@app}.json")
@@ -33,9 +29,7 @@ module SPV
     # @attr_reader Gets current application config
     attr_reader :config
 
-    # @attr_reader Gets global spv settings
-    attr_reader :settings
-
+    
     def repo_path(repo = :repository)
       @config[repo.to_s]
     end

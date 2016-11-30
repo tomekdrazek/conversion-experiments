@@ -1,6 +1,0 @@
-# This is global spv application config
----
-async: false
-redis:
-  host: 127.0.0.1
-tmp: ./tmp

@@ -34,6 +34,14 @@ module SPV
         @processor
       end
 
+      def move_to_temp(file)
+        logger.info file
+        tmp_path = File.join(TEMP_FOLDER, "uploads", file[:filename])
+        FileUtils.mkdir_p(File.dirname(tmp_path))
+        FileUtils.mv(file[:tempfile].path, tmp_path)
+        tmp_path
+      end
+
       def handle_upload
         if request.content_type.downcase.include? "multipart/form-data"
           logger.info "detected multipart file upload"
@@ -41,26 +49,17 @@ module SPV
         else
           logger.info "detected body content file upload"
           mime_type = MIME::Types[request.content_type].first
-          if request.content_type.downcase.include?("pdf") || request.content_type.downcase.include?("image")
+          #if request.content_type.downcase.include?("pdf") || request.content_type.downcase.include?("image")
             # Body content may not have a file name
             filename = [params['filename'] || Dir::Tmpname.make_tmpname("upload", "tmp"), ".", mime_type.preferred_extension].join
             tmp_file = Tempfile.new(filename)
             tmp_file.write(request.body.read)
             { 'body' => { type: request.content_type, filename: filename, name: filename, tempfile: tmp_file } }
-          end
+          #end
           # the body contains the file itself.
         end
       end
     end
-
-    # use Rack::Auth::Basic, "Restricted Area" do |username, password|
-    #   begin
-    #     @@processor = SPV::Processor.new(username)
-    #     @@processor.authorized?(password)
-    #   rescue
-    #     false
-    #   end
-    # end
 
     get '/test' do
       protected!
@@ -73,23 +72,22 @@ module SPV
       json processor.report
     end
 
-
+    # Put the exactly one page with uploaded file (selection)
     put '/page/:id' do |id|
       protected!
       uploaded = handle_upload
       file = uploaded.first[1]
-      logger.info file
       sel = params[:sel] || "1~-1"
-      tmp_path = File.join(processor.settings['tmp'], "uploads", file[:filename])
-      FileUtils.mkdir_p(File.dirname(tmp_path))
-      FileUtils.mv(file[:tempfile].path, tmp_path)
+      tmp_path = move_to_temp(file)
       processor.add(tmp_path, sel, SPV::parse_ids(id, false) )
       processor.process_queue
       json processor.report
     end
 
     delete '/page/:id' do |id|
-
+      protected!
+      processor.del(SPV::parse_ids(id, false))
+      json processor.report
     end
 
     put '/pages' do
@@ -106,6 +104,69 @@ module SPV
       json processor.report
     end
 
+    # List all intents in the application
+    get '/intents' do
+      protected!
+      processor.intent_list
+      json processor.intents
+    end
+
+    # Gets particular intent (indicated by :id)
+    get '/intent/:id' do |id|
+      protected!
+      processor.intent_list
+      json processor.intents[id] || {}
+    end
+
+    # Set profile for the intent :id
+    put '/intent/:id' do |id|
+      protected!
+      uploaded = handle_upload
+      file = uploaded.first[1]
+      tmp_path = move_to_temp(file)
+      processor.intent_set(id, tmp_path)
+      json processor.intents[id] || {}
+    end
+
+    # Removes profile for the particular intent
+    delete '/intent/:id' do |id|
+      protected!
+      processor.intent_del(id)
+      processor.intent_list
+      json processor.intents[id] || {}
+    end
+
+    # List all displays in the application
+    get '/displays' do
+      protected!
+      processor.display_list
+      json processor.displays
+    end
+
+    # Gets particular display (indicated by :id)
+    get '/display/:id' do |id|
+      protected!
+      processor.display_list
+      json processor.displays[id] || {}
+    end
+
+    # Set profile for the display :id
+    put '/display/:id' do |id|
+      protected!
+      uploaded = handle_upload
+      file = uploaded.first[1]
+      tmp_path = move_to_temp(file)
+      processor.display_set(id, tmp_path)
+      json processor.displays[id] || {}
+    end
+
+    # Removes profile for the particular display
+    delete '/display/:id' do |id|
+      protected!
+      processor.display_del(id)
+      processor.display_list
+      json processor.displays[id] || {}
+    end
     # start the server if ruby file executed directly
     run! if app_file == $0
   end
