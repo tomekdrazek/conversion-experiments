@@ -8,3 +8,7 @@ gem 'sinatra-contrib'
 gem 'yard'
 gem 'remote_lock'
 gem 'mime-types'
+
+gem 'capistrano'
+gem 'capistrano-rvm'
+gem 'capistrano-bundler'

@@ -1,5 +1,5 @@
 # The main interface class
-require_relative 'init.rb'
+require_relative '../config/init.rb'
 require_relative 'spv/spv_convert'
 require_relative 'spv/spv_worker'
 require_relative 'spv/spv_utils'

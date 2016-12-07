@@ -19,8 +19,13 @@ module SPV
       @config = nil
       @@redis = @@redis || Redis.new(REDIS_CONNECTION || {})
       @app = File.basename(app)
-      raise "Missing configuration 'config/#{@app}.json'." unless File.exists?("config/#{@app}.json")
-      @config = _load_json("config/#{@app}.json")
+      if File.exists?("config/apps/#{@app}.json")
+        @config = _load_json("config/apps/#{@app}.json")
+      elsif File.exists?("config/apps/#{@app}.yaml")
+        @config = YAML.load_file("config/apps/#{@app}.yaml")
+      else
+        raise "Missing configuration 'config/apps/#{@app}.json|.yaml'."
+      end
     end
 
     # @attr_reader Gets current application name
@@ -29,7 +34,7 @@ module SPV
     # @attr_reader Gets current application config
     attr_reader :config
 
-    
+
     def repo_path(repo = :repository)
       @config[repo.to_s]
     end

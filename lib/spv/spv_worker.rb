@@ -1,5 +1,5 @@
 require 'sidekiq'
-require_relative '../init.rb'
+require_relative '../../config/init.rb'
 require_relative 'spv_utils'
 require_relative 'spv_convert'
 
