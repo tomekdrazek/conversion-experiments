@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require_relative 'lib/spv.rb'
+require_relative '../lib/spv.rb'
 require 'commander/import'
 
 program :name, 'Soft Proof Viewer - Command Line Interface'
