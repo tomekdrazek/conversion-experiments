@@ -216,7 +216,6 @@ module SPV
           version_entry = entry.select { |k| k!='id' }
           version_entry['version'] = version
           report_entry['versions'] << version_entry
-          puts report_entry.inspect
           _save_json(page_file(page_id),report_entry)
           @report << report_entry
           @queue  << { 'app'=>@app, 'id'=>page_id, 'version'=> version - 1 }

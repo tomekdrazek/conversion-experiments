@@ -24,7 +24,7 @@ namespace :spv do
     puts "Starting backend processing deamon."
     system "bundle exec sidekiq -r ./lib/spv/spv_worker.rb -d -L log/spv.log -P tmp/spv.pid"
     puts "Starting REST API web server."
-    system "bundle exec thin start -d -l log/spv.api.log -P tmp/spv.api.pid"
+    system "bundle exec thin start -d -p 8080 -l log/spv.api.log -P tmp/spv.api.pid"
   end
 
   desc "Stop backed service"

@@ -1,8 +1,13 @@
 {
   "namespace":  "Sample Application",
+
   "repository": "public/sample/pages",
+  "repositoryURL": "/sample/pages/",
   "intents":    "public/sample/intents",
+  "intentsURL": "/sample/intents",
   "displays":   "public/sample/displays",
+  "displaysURL": "/sample/displays",
+
   "output":     "yaml",
   "pageName":   "{randomHex:2}-{randomHex:4}-{randomHex:2}",
 

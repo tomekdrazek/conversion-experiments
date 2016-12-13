@@ -7,5 +7,5 @@ set :deploy_to, '/home/spv/conversion-experiments'
 
 set :log_level, :debug
 
-set :linked_files, [ "config/init.rb" ]
-set :linked_dirs, [ "config/apps", "public" ]
+set :linked_files,  [ "config/init.rb" ]
+set :linked_dirs,   [ "config/apps", "public", "log", "tmp" ]
