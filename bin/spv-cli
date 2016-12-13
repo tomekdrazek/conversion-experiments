@@ -36,7 +36,7 @@ command :add do |c|
   c.option '-i', '--ids IDS', String, "Comma separated list of page IDS to be assgined to."
   c.action do |args, options|
     p = SPV::Processor.new($app)
-    raise "No source document specified" if args[0].nil?
+    raise "No source document specified." if args[0].nil?
     p.add( args[0], options.sel, SPV::parse_ids(options.ids, false) )
     p.process_queue
     p.output(p.report, $type)

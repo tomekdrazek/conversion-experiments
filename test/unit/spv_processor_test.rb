@@ -1,8 +1,8 @@
 # This test is used to conversion processor routines in the SPV::Processor class.
 # @author Tomek Drazek <tomek@newshubmedia.com>
 
-require_relative 'test_helper.rb'
-require_relative '../lib/spv'
+require_relative '../test_helper.rb'
+require_relative '../../lib/spv'
 require 'json'
 
 class TestSPVProcessor < Test::Unit::TestCase
@@ -30,8 +30,8 @@ class TestSPVProcessor < Test::Unit::TestCase
     p = SPV::Processor.new('sample')
     p.add(fixture_path('colors-spot.pdf'), nil, ['page-1', 'page-2'])
     p.add(fixture_path('colors.pdf'), nil, ['page-1'])
-    assert_true File.exists?('public/sample/pages/page-1.json')
-    assert_true File.exists?('public/sample/pages/page-2.json')
+    assert_true File.exist?('public/sample/pages/page-1.json')
+    assert_true File.exist?('public/sample/pages/page-2.json')
     assert_true File.directory?('public/sample/pages/page-1')
     assert_true File.directory?('public/sample/pages/page-2')
     assert_equal 3, p.queue.count

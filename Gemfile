@@ -13,5 +13,6 @@ gem 'capistrano'
 gem 'capistrano-rvm'
 gem 'capistrano-bundler'
 
+gem 'test-unit'
 
 gem 'thin'

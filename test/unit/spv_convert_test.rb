@@ -2,8 +2,8 @@
 # This module is a API for the command line utilities to prepare conversion and verification routines
 # @author Tomek Drazek <tomek@newshubmedia.com>
 
-require_relative 'test_helper.rb'
-require_relative '../lib/spv/spv_convert'
+require_relative '../test_helper.rb'
+require_relative '../../lib/spv/spv_convert'
 
 class TestSPVConvert < Test::Unit::TestCase
   include SPV::Convert
@@ -64,10 +64,10 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_true ch[0][:channels].include? :cyan
     assert_true ch[0][:channels].include? :magenta
     assert_true ch[0][:channels].include? :yellow
-    assert_true File.exists? ch[0][:img]
+    assert_true File.exist? ch[0][:img]
     assert_equal 1, ch[1][:channels].count
     assert_true ch[1][:channels].include? :black
-    assert_true File.exists? ch[1][:img]
+    assert_true File.exist? ch[1][:img]
     ch = Dir.mktmpdir do |tmp_dir|
       out = _convert_pdf_page(fixture_path('colors-spot.pdf'), tmp_dir, 2)
       _merge_channels(out, './tmp/colors-spot/page2', "001")
@@ -77,11 +77,11 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_true ch[0][:channels].include? :cyan
     assert_true ch[0][:channels].include? :magenta
     assert_true ch[0][:channels].include? :yellow
-    assert_true File.exists? ch[0][:img]
+    assert_true File.exist? ch[0][:img]
     assert_equal 2, ch[1][:channels].count
     assert_true ch[1][:channels].include? :black
     assert_true ch[1][:channels].include? "Spot 1"
-    assert_true File.exists? ch[1][:img]
+    assert_true File.exist? ch[1][:img]
 
     # _convert_page("./tests/fixtures/Olivia-2012-07-011.pdf", "./tmp/test/ol-01.tif", 1)
     # _convert_page(page, "./tmp/test/page-no-cms.tif", 1)
@@ -103,27 +103,27 @@ class TestSPVConvert < Test::Unit::TestCase
     assert_true ch[0][:channels].include? :cyan
     assert_true ch[0][:channels].include? :magenta
     assert_true ch[0][:channels].include? :yellow
-    assert_true File.exists? ch[0][:img]
+    assert_true File.exist? ch[0][:img]
     assert_equal 1, ch[1][:channels].count
     assert_true ch[1][:channels].include? :black
-    assert_true File.exists? ch[1][:img]
+    assert_true File.exist? ch[1][:img]
   end
 
   # Test probes conversion
   def test_probes_conversion
     _convert_probes(fixture_path("cmyk-64.tif"), "./tmp/probes.jpg", fixture_path("ISOcoated_v2_eci.icc"), fixture_path("WideGamutRGB.icc") )
-    assert_true File.exists?("./tmp/probes.jpg")
+    assert_true File.exist?("./tmp/probes.jpg")
   end
 
   # Test PDF thumbnail creation
   def test_pdf_thb
     out = _thb_pdf(fixture_path('colors-spot.pdf'), "./tmp/thumb", 1)
-    assert_true File.exists?(out)
+    assert_true File.exist?(out)
   end
 
   # Test bitmap thumbnail creation
   def test_bmp_thb
     out = _thb_bmp(fixture_path('colors-cmyk-fogra.tiff'), "./tmp/thumb")
-    assert_true File.exists?(out)
+    assert_true File.exist?(out)
   end
 end

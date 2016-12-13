@@ -33,6 +33,7 @@ GEM
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (3.2.0)
+    power_assert (0.2.6)
     rack (1.6.5)
     rack-protection (1.5.3)
       rack
@@ -60,6 +61,8 @@ GEM
     sshkit (1.11.4)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    test-unit (3.1.5)
+      power_assert
     thin (1.7.0)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0, >= 1.0.4)
@@ -81,6 +84,7 @@ DEPENDENCIES
   sidekiq
   sinatra
   sinatra-contrib
+  test-unit
   thin
   yard
 

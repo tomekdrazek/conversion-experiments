@@ -150,16 +150,14 @@ private
     # @return [Array] returns array of integers (positive, 1-index) of pages in the selection expression.
     def _get_page_sel(str,page_count = 0)
       out=[]
-      def _rfind(i,page_count)
-        i = i.to_i; i > 0 ? i : page_count + i > 0 ? page_count + i + 1 : 1
-      end
+
       chunks = str.gsub(/\s+/, "").split(",") # remove all white spaces
       chunks.each do |chunk|
         if chunk.include? '~'
           seq = chunk.split('~')
-          (_rfind(seq[0],page_count).._rfind(seq[1],page_count)).each { |k| out << k }
+          (_rf(seq[0],page_count).._rf(seq[1],page_count)).each { |k| out << k }
         else
-          out << _rfind(chunk,page_count)
+          out << _rf(chunk,page_count)
         end
       end
       out
@@ -317,6 +315,9 @@ private
         `gm convert "#{tmp}" -quality #{PROBES_COMPRESSION_QUALITY} "#{samples_dst}"`
       end
     end
-
+    
+    def _rf(i,page_count)
+      i = i.to_i; i > 0 ? i : page_count + i > 0 ? page_count + i + 1 : 1
+    end
   end
 end

@@ -2,7 +2,8 @@ require 'rake/testtask'
 require_relative 'lib/spv'
 
 Rake::TestTask.new do |t|
-  t.libs << 'tests'
+  t.test_files = FileList['test/unit/*_test.rb']
+  # t.verbose = true
 end
 
 namespace :spv do
@@ -28,12 +29,12 @@ namespace :spv do
 
   desc "Stop backed service"
   task :stop do
-    if File.exists? "tmp/spv.pid"
+    if File.exist? "tmp/spv.pid"
       pid = File.read("tmp/spv.pid").chomp
       system "kill #{pid}"
       FileUtils.rm "tmp/spv.pid"
     end
-    if File.exists? "tmp/spv.api.pid"
+    if File.exist? "tmp/spv.api.pid"
       pid = File.read("tmp/spv.api.pid").chomp
       system "kill #{pid}"
     end

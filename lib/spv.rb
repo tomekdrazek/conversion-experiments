@@ -77,7 +77,7 @@ module SPV
     def del(ids)
       ids.each do |page_id|
         with_lock_on(page_file(page_id)) do
-          report_entry = if File.exists?(page_file(page_id))
+          report_entry = if File.exist?(page_file(page_id))
             _load_json(page_file(page_id))
           else
             { 'id'=> page_id, 'status'=>'deleted' }
@@ -90,7 +90,7 @@ module SPV
     def get(ids)
       ids.each do |page_id|
         with_lock_on(page_file(page_id)) do
-          report_entry = if File.exists?(page_file(page_id))
+          report_entry = if File.exist?(page_file(page_id))
             _load_json(page_file(page_id))
           else
             { 'id'=> page_id, 'status'=>'deleted' }
@@ -124,15 +124,17 @@ module SPV
     #
     def intent_set(name, icc, async = ASYNC_PROCESSING)
       dst = intent_path(name)
-      dst_icc = File.join(dst,File.basename(icc))
-      FileUtils.mkdir_p(dst) # ensure directory exists
-      FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
-      with_lock_on(intent_file) do
-        intent_list
-        @intents[name] = { 'icc' => dst_icc }
-        _save_json(intent_file, @intents)
+      _download_sandbox(icc) do |tmp_icc|
+        dst_icc = File.join(dst,File.basename(tmp_icc))
+        FileUtils.mkdir_p(dst) # ensure directory exists
+        FileUtils.cp(tmp_icc,dst_icc) # copy ICC profile to the repository
+        with_lock_on(intent_file) do
+          intent_list
+          @intents[name] = { 'icc' => dst_icc }
+          _save_json(intent_file, @intents)
+        end
       end
-      display_list
+      display_list # read curren display list
       @displays.each do |k,i|
         if async
           SPV::CalibrationWorker.perform_async(app, k, name)
@@ -163,15 +165,17 @@ module SPV
     # Set icc profile for the display, starts background worker to process
     def display_set(name,icc, async = ASYNC_PROCESSING)
       dst = display_path(name)
-      dst_icc = File.join(dst,File.basename(icc))
-      FileUtils.mkdir_p(dst) # ensure directory exists
-      FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
-      with_lock_on(display_file) do
-        display_list
-        @displays[name] = { 'icc' => dst_icc }
-        _save_json(display_file, @displays)
+      _download_sandbox(icc) do |tmp_icc|
+        dst_icc = File.join(dst,File.basename(icc))
+        FileUtils.mkdir_p(dst) # ensure directory exists
+        FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
+        with_lock_on(display_file) do
+          display_list
+          @displays[name] = { 'icc' => dst_icc }
+          _save_json(display_file, @displays)
+        end
       end
-      intent_list
+      intent_list # read current intents
       @intents.each do |k,i|
         if async
           SPV::CalibrationWorker.perform_async(app, name, k)

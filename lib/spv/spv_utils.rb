@@ -19,9 +19,9 @@ module SPV
       @config = nil
       @@redis = @@redis || Redis.new(REDIS_CONNECTION || {})
       @app = File.basename(app)
-      if File.exists?("config/apps/#{@app}.json")
+      if File.exist?("config/apps/#{@app}.json")
         @config = _load_json("config/apps/#{@app}.json")
-      elsif File.exists?("config/apps/#{@app}.yaml")
+      elsif File.exist?("config/apps/#{@app}.yaml")
         @config = YAML.load_file("config/apps/#{@app}.yaml")
       else
         raise "Missing configuration 'config/apps/#{@app}.json|.yaml'."
@@ -74,10 +74,17 @@ module SPV
       end if @@lock
     end
 
+    # Check if file is local or remote file system (url), if local just perform block on it, otherwise performs download to the temp folder, performs block and remove temporary files.
+    # Handles http/s and ftp/s connections
+    def _download_sandbox(src, &block)
+      tmp_src = src
+      yield tmp_src
+    end
+
     # Interfaces load_json feature, so can be easly changed to database if needed
     def _load_json(path)
       with_lock_on(path) do
-        JSON.parse(File.read(path)) if File.exists?(path)
+        JSON.parse(File.read(path)) if File.exist?(path)
       end
     end
 
