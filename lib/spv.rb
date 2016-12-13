@@ -61,17 +61,17 @@ module SPV
     # Returns an object with pages description and ids associations
     # that can be easly converted to JSON
     def add(src, sel=nil, ids=nil)
-      # TODO: if src is URL, download it first.
-      tmp_src = src
-      sel = "1~-1" if sel.nil?
-      # Preflight local version of source:
-      queue = if File.extname(tmp_src)==".pdf"
-        _check_pdf(tmp_src)
-      else
-        _check_bmp(tmp_src) # TODO: not implemented
+      _download_sandbox(src) do |tmp_src|
+        sel = "1~-1" if sel.nil?
+        # Preflight local version of source:
+        queue = if File.extname(tmp_src)==".pdf"
+          _check_pdf(tmp_src)
+        else
+          _check_bmp(tmp_src) # TODO: not implemented
+        end
+        queue = _apply_sel(queue,sel,ids)
+        _update_existing(queue)
       end
-      queue = _apply_sel(queue,sel,ids)
-      _update_existing(queue)
     end
 
     def del(ids)
@@ -163,12 +163,12 @@ module SPV
     end
 
     # Set icc profile for the display, starts background worker to process
-    def display_set(name,icc, async = ASYNC_PROCESSING)
+    def display_set(name, icc, async = ASYNC_PROCESSING)
       dst = display_path(name)
       _download_sandbox(icc) do |tmp_icc|
-        dst_icc = File.join(dst,File.basename(icc))
+        dst_icc = File.join(dst,File.basename(tmp_icc))
         FileUtils.mkdir_p(dst) # ensure directory exists
-        FileUtils.cp(icc,dst_icc) # copy ICC profile to the repository
+        FileUtils.cp(tmp_icc,dst_icc) # copy ICC profile to the repository
         with_lock_on(display_file) do
           display_list
           @displays[name] = { 'icc' => dst_icc }

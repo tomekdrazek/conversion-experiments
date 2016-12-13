@@ -21,9 +21,9 @@ namespace :spv do
 
   desc "Start backend service"
   task :start do
-    puts "Backend deamon start:"
+    puts "Starting backend processing deamon."
     system "bundle exec sidekiq -r ./lib/spv/spv_worker.rb -d -L log/spv.log -P tmp/spv.pid"
-    puts "REST API deamon start:"
+    puts "Starting REST API web server."
     system "bundle exec thin start -d -l log/spv.api.log -P tmp/spv.api.pid"
   end
 

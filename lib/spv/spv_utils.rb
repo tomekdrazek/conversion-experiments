@@ -1,5 +1,6 @@
 require 'remote_lock'
 require 'colorize'
+require 'open-uri'
 
 module SPV
 
@@ -10,6 +11,7 @@ module SPV
   end
 
   module Utils
+
     # lock timeout after which the error will be raised.
     @@redis = nil
     @@lock  = nil
@@ -77,8 +79,25 @@ module SPV
     # Check if file is local or remote file system (url), if local just perform block on it, otherwise performs download to the temp folder, performs block and remove temporary files.
     # Handles http/s and ftp/s connections
     def _download_sandbox(src, &block)
-      tmp_src = src
+
+      download = false
+      uri = URI.parse(src)
+      tmp_src = if uri.scheme.nil?
+        src
+      else
+        download = true
+        basename = File.basename(uri.path)
+        FileUtils.mkdir_p(File.join(TEMP_FOLDER, "downloads"))
+        tmp = File.join(TEMP_FOLDER, "downloads", basename)
+        uri.open do |f|
+          IO.copy_stream(f, tmp)
+        end
+        tmp
+      end
       yield tmp_src
+      if download
+        FileUtils.rm tmp_src
+      end
     end
 
     # Interfaces load_json feature, so can be easly changed to database if needed

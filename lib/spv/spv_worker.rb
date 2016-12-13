@@ -73,7 +73,7 @@ module SPV
       self.app = app
       puts "Calibration builder: #{display} for #{intent}"
       # TODO: change this into path that does not use fixtures:
-      src = "tests/fixtures/cmyk-64.tif"
+      src = "test/fixtures/cmyk-64.tif"
 
       # update calibration file with new intent:
       with_lock_on(display_file) do
