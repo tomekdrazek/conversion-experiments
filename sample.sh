@@ -10,3 +10,6 @@ bundle exec bin/spv-cli display -s apple http://nullcake.com/test/icc/RGB/AppleR
 sleep 1
 bundle exec bin/spv-cli intent -s uswebcoated http://nullcake.com/test/icc/CMYK/USWebCoatedSWOP.icc
 sleep 1
+
+
+bundle exec bin/spv-cli add http://nullcake.com/test/page.pdf
