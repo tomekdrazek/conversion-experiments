@@ -1,0 +1,15 @@
+# This configuration uses yaml as the replacement for JSON file for configuation purposes:
+
+---
+namespace: Remote test of pages
+repository: public/remote/pages
+repositoryURL: /remote/pages/
+intents:  public/remote/intents
+intentsURL: /remote/intents
+displays: public/remote/displays
+displaysURL: /remote/displays
+output: yaml
+pageName: {{random}}
+keys:
+  - ii20319hkjasoudoi2iupi1902u4nvbjtoo
+  - iuiurhfbjhdsfu23hyh8919289yhr98auso
