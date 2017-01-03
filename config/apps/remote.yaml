@@ -9,6 +9,7 @@ intentsURL: http://localhost:8080/remote/intents
 displays: public/remote/displays
 displaysURL: http://localhost:8080/remote/displays
 output: yaml
+# Set this to true if you want to have also URL-s mapped in the local command line client:
 mapURL: true
 pageName: {{random}}
 keys:
