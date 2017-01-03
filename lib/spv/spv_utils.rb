@@ -3,7 +3,7 @@ require 'colorize'
 require 'open-uri'
 
 module SPV
-
+  PATH_MAPS = [:intents, :displays, :repository]
   module_function
   def parse_ids(ids, obligatory=true)
     raise "Page id(s) is/are obligatory." if obligatory && (ids.nil? || !ids.is_a?(String) || ids.empty?)
@@ -35,6 +35,7 @@ module SPV
 
     # @attr_reader Gets current application config
     attr_reader :config
+
 
 
     def repo_path(repo = :repository)
@@ -113,5 +114,14 @@ module SPV
         File.write(path, JSON.pretty_generate(object))
       end
     end
+
+
+    # This method retrives a duplicate of object with all paths mapped to URL-s as defined in the application config
+    def _map_paths(obj)
+      obj.each_with_object({}) do |(k,v),g|
+        g[k] = (Hash === v) ? _map_paths(v) : ( PATH_MAPS.each {|s| v=v.gsub(config[s.to_s], config["#{s.to_s}URL"]) }; v)
+      end
+    end
+
   end
 end

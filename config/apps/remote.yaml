@@ -3,12 +3,13 @@
 ---
 namespace: Remote test of pages
 repository: public/remote/pages
-repositoryURL: /remote/pages/
+repositoryURL: http://localhost:8080/remote/pages/
 intents:  public/remote/intents
-intentsURL: /remote/intents
+intentsURL: http://localhost:8080/remote/intents
 displays: public/remote/displays
-displaysURL: /remote/displays
+displaysURL: http://localhost:8080/remote/displays
 output: yaml
+mapURL: true
 pageName: {{random}}
 keys:
   - ii20319hkjasoudoi2iupi1902u4nvbjtoo

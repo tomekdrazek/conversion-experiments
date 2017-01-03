@@ -31,25 +31,26 @@ module SPV
 
     # Check against configuration for authentication embedded inside json config of the app.
     def authorized?(key)
-      if @config['keys']
-        @config['keys'].include?(key)
+      if config['keys']
+        config['keys'].include?(key)
       else
         false
       end
     end
 
     def output(obj, force_type=nil)
-      type = @config['output']
+      type = config['output']
       type = force_type if (force_type)
+      obj = _map_paths(obj) if config['mapURL']
       case type
-      when 'yaml'
-        puts obj.to_yaml
-      when 'json'
-        puts obj.to_json
-      when 'jsonp'
-        puts JSON.pretty_generate(obj)
-      else
-        puts obj.inspect
+        when 'yaml'
+          puts obj.to_yaml
+        when 'json'
+          puts obj.to_json
+        when 'jsonp'
+          puts JSON.pretty_generate(obj)
+        else
+          puts obj.inspect
       end
     end
 
@@ -222,7 +223,6 @@ module SPV
         end
       end
     end
-
 
 
   end

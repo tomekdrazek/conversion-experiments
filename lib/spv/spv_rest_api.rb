@@ -13,6 +13,10 @@ module SPV
         request.logger
       end
 
+      def output_json(obj)
+        json @processor._map_paths(obj)
+      end
+
       def protected!
         return if authorized?
         headers['WWW-Authenticate'] = 'Basic realm="Restricted Area"'
@@ -63,13 +67,13 @@ module SPV
 
     get '/test' do
       protected!
-      json "Hello world"
+      output_json "Hello world"
     end
 
     get '/page/:id' do |id|
       protected!
       processor.get(SPV::parse_ids(id))
-      json processor.report
+      output_json processor.report
     end
 
     # Put the exactly one page with uploaded file (selection)
@@ -81,13 +85,13 @@ module SPV
       tmp_path = move_to_temp(file)
       processor.add(tmp_path, sel, SPV::parse_ids(id, false) )
       processor.process_queue
-      json processor.report
+      output_json processor.report
     end
 
     delete '/page/:id' do |id|
       protected!
       processor.del(SPV::parse_ids(id, false))
-      json processor.report
+      output_json processor.report
     end
 
     put '/pages' do
@@ -101,21 +105,21 @@ module SPV
     get '/pages' do
       protected!
       processor.list(params['pattern'] || "*")
-      json processor.report
+      output_json processor.report
     end
 
     # List all intents in the application
     get '/intents' do
       protected!
       processor.intent_list
-      json processor.intents
+      output_json processor.intents
     end
 
     # Gets particular intent (indicated by :id)
     get '/intent/:id' do |id|
       protected!
       processor.intent_list
-      json processor.intents[id] || {}
+      output_json processor.intents[id] || {}
     end
 
     # Set profile for the intent :id
@@ -125,7 +129,7 @@ module SPV
       file = uploaded.first[1]
       tmp_path = move_to_temp(file)
       processor.intent_set(id, tmp_path)
-      json processor.intents[id] || {}
+      output_json processor.intents[id] || {}
     end
 
     # Removes profile for the particular intent
@@ -133,21 +137,21 @@ module SPV
       protected!
       processor.intent_del(id)
       processor.intent_list
-      json processor.intents[id] || {}
+      output_json processor.intents[id] || {}
     end
 
     # List all displays in the application
     get '/displays' do
       protected!
       processor.display_list
-      json processor.displays
+      output_json processor.displays
     end
 
     # Gets particular display (indicated by :id)
     get '/display/:id' do |id|
       protected!
       processor.display_list
-      json processor.displays[id] || {}
+      output_json processor.displays[id] || {}
     end
 
     # Set profile for the display :id
@@ -157,7 +161,7 @@ module SPV
       file = uploaded.first[1]
       tmp_path = move_to_temp(file)
       processor.display_set(id, tmp_path)
-      json processor.displays[id] || {}
+      output_json processor.displays[id] || {}
     end
 
     # Removes profile for the particular display
@@ -165,7 +169,7 @@ module SPV
       protected!
       processor.display_del(id)
       processor.display_list
-      json processor.displays[id] || {}
+      output_json processor.displays[id] || {}
     end
     # start the server if ruby file executed directly
     run! if app_file == $0

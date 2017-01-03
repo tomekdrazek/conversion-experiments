@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Samples should work when local service is launched, to do so use rake command:
 rake spv:start
 
@@ -44,7 +43,7 @@ export APIKEY="-u sample:ii20319hkjasoudoi2iupi1902u4nvbjtoo"
 curl -X GET http://$APISRV/test -s $APIKEY
 
 ## List all displays
-curl -X GET http://$APISRV/displays -s $APIKEY | json_pp
+curl -X GET http://$APISRV/displays $APIKEY | json_pp
 
 ## Get particul display
 curl -X GET http://$APISRV/display/wide_gamout $APIKEY | json_pp
@@ -86,7 +85,7 @@ curl -X GET http://$APISRV/page/alfa-bmp $APIKEY
 curl -X DELETE http://$APISRV/page/alfa-bmp?sel=1 $APIKEY
 
 ## Put beta-pdf (single file delivered as a multipart)
-curl -X PUT $APIKEY http://$APISRV/page/beta?sel=1,2\&id=a1,a2 -H "Content-Type: multipart/form-data; charset=utf8; boundary=__X_PAW_BOUNDARY__"  -F "file1=@test/fixtures/Lorem-ipsum.pdf"
+curl -X PUT $APIKEY http://$APISRV/page/beta -H "Content-Type: multipart/form-data; charset=utf8; boundary=__X_PAW_BOUNDARY__"  -F "file1=@test/fixtures/Lorem-ipsum.pdf"
 
 ## Get beta-pdf
 curl -X GET $APIKEY http://$APISRV/page/beta | json_pp
@@ -95,7 +94,7 @@ curl -X GET $APIKEY http://$APISRV/page/beta | json_pp
 curl -X DELETE http://$APISRV/page/beta $APIKEY
 
 ## Put gamma-pdf (src ref)
-curl -X PUT $APIKEY http://$APISRV/page/gamma-pdf?sel=1\&src=http:%2F%2Fnullcake.com%2Ftest%2Fpage.pdf
+curl -X PUT $APIKEY http://$APISRV/page/gamma-pdf?src=http:%2F%2Fnullcake.com%2Ftest%2Fpage.pdf
 
 ## List all pages
-curl -X GET http://$APISRV/pages?sel=1 $APIKEY
+curl -X GET http://$APISRV/pages $APIKEY
